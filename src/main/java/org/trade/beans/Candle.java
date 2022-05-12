@@ -1,5 +1,7 @@
 package org.trade.beans;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
 
 public class Candle {
@@ -65,6 +67,10 @@ public class Candle {
 
 	public void setTickVolume(Integer tickVolume) {
 		this.tickVolume = tickVolume;
+	}
+
+	public ZonedDateTime getZonedDate() {
+		return ZonedDateTime.ofInstant(time.toInstant(), ZoneId.systemDefault());
 	}
 
 	@Override

@@ -17,5 +17,8 @@ public class Constants {
 
 	public static String HISTORIC_DATA_ENDPOINT = META_API_BASE_PATH_HISTORIC_DATA + "/users/current/accounts/"
 			+ META_API_ACCOUNT_ID + "/historical-market-data/symbols/{symbol}/timeframes/{timeframe}/candles";
-
+	public static String CURRENT_CANDLE_ENDPOINT = META_API_BASE_PATH_SERVER + "/users/current/accounts/"
+			+ META_API_ACCOUNT_ID + "/symbols/{symbol}/current-candles/{timeframe}";
+	public static String TRADE_ENDPOINT = META_API_BASE_PATH_SERVER + "/users/current/accounts/" + META_API_ACCOUNT_ID
+			+ "/trade";
 }
