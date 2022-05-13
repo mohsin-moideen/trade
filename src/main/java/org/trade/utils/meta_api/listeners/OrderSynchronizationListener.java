@@ -8,7 +8,8 @@ import org.trade.core.FxTradingRecord;
 import org.trade.utils.meta_api.MetaApiUtil;
 
 import cloud.metaapi.sdk.clients.meta_api.SynchronizationListener;
-import cloud.metaapi.sdk.clients.meta_api.models.MetatraderOrder;
+import cloud.metaapi.sdk.clients.meta_api.models.MetatraderPosition;
+import cloud.metaapi.sdk.clients.meta_api.models.MetatraderTradeResponse;
 import cloud.metaapi.sdk.meta_api.MetaApiConnection;
 
 public class OrderSynchronizationListener extends SynchronizationListener {
@@ -25,10 +26,13 @@ public class OrderSynchronizationListener extends SynchronizationListener {
 	@Override
 	public CompletableFuture<Void> onOrderCompleted(String instanceIndex, String orderId) {
 		try {
-			MetatraderOrder order;
+			MetatraderPosition position;
 			MetaApiConnection connection = MetaApiUtil.getMetaApiConnection();
-			order = connection.getOrder(orderId).get();
-			tradingRecord.getCurrentPosition().getOrder().positionId = order.positionId;
+			position = connection.getPosition(orderId).get();
+			MetatraderTradeResponse tradeOrder = tradingRecord.getCurrentPosition().getOrder();
+			if (position != null && position.id == tradeOrder.orderId) {
+				tradeOrder.positionId = position.id;
+			}
 
 		} catch (Exception e) {
 			log.error("<<<<<<<<<<< FAILED TO UPDATE POSITION ID FOR ORDER " + orderId + " >>>>>>>>>>>>>>>>>", e);

@@ -8,7 +8,7 @@ public class TradeRequest {
 
 	private TradeType actionType;
 	private String symbol;
-	private Integer volume;
+	private Double volume;
 	private Double openPrice;
 	private Double stopLoss;
 	private Double takeProfit;
@@ -32,11 +32,11 @@ public class TradeRequest {
 		this.symbol = symbol;
 	}
 
-	public Integer getVolume() {
+	public Double getVolume() {
 		return volume;
 	}
 
-	public void setVolume(Integer volume) {
+	public void setVolume(Double volume) {
 		this.volume = volume;
 	}
 

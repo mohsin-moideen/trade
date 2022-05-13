@@ -1,10 +1,9 @@
 package org.trade.utils.meta_api;
 
-import java.util.concurrent.ExecutionException;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.trade.Constants;
+import org.trade.utils.JsonUtils;
 
 import cloud.metaapi.sdk.clients.meta_api.SynchronizationListener;
 import cloud.metaapi.sdk.clients.meta_api.models.MetatraderAccountInformation;
@@ -26,7 +25,7 @@ public class MetaApiUtil {
 				Options options = new Options();
 				options.region = Constants.META_API_SERVER_REGION;
 				api = new MetaApi(Constants.META_API_API_KEY, options);
-
+				log.info("Successfully retrieved meta api");
 			} catch (Exception e) {
 				log.error("Failed to init metapi ", e);
 			}
@@ -37,15 +36,27 @@ public class MetaApiUtil {
 	private static MetatraderAccount getMetaAccount() {
 		if (account == null) {
 			String accountId = Constants.META_API_ACCOUNT_ID;
-			account = getMetaApi().getMetatraderAccountApi().getAccount(accountId).join();
+			try {
+				account = getMetaApi().getMetatraderAccountApi().getAccount(accountId).get();
+				log.info("Successfully retrieved meta api account " + account.getId());
+			} catch (Exception e) {
+				log.error("Failed to get MetaApi connection", e);
+
+			}
 		}
 		return account;
 	}
 
 	public static MetaApiConnection getMetaApiConnection() {
 		if (connection == null) {
-			MetaApiConnection connection = getMetaAccount().connect().join();
-			connection.waitSynchronized().join();
+			try {
+				connection = getMetaAccount().connect().get();
+				connection.waitSynchronized().get();
+				log.info("Successfully retrieved meta api account connection for" + account.getId());
+
+			} catch (Exception e) {
+				log.error("Failed to get MetaApi connection", e);
+			}
 		}
 		return connection;
 	}
@@ -59,18 +70,10 @@ public class MetaApiUtil {
 	}
 
 	public static void main(String[] args) {
-
-		MetatraderAccountInformation accountInfo = connection.getAccountInformation().join();
+		initMetaApi();
+		MetatraderAccountInformation accountInfo = getMetaApiConnection().getAccountInformation().join();
 		System.out.println(accountInfo.balance);
-		try {
-			getMetaAccount().undeploy().get();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		System.out.println(JsonUtils.getString(connection.getPositions().join()));
 
 	}
 

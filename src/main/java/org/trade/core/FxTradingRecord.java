@@ -178,7 +178,7 @@ public class FxTradingRecord implements TradingRecord {
 			throw new IllegalStateException("Current position should not be closed");
 		}
 		boolean newTradeWillBeAnEntry = currentPosition.isNew();
-		Trade newTrade = currentPosition.operate(index, price, amount);
+		Trade newTrade = currentPosition.operate(index, price, amount, name);
 		recordTrade(newTrade, newTradeWillBeAnEntry);
 	}
 

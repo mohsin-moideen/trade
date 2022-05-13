@@ -113,7 +113,7 @@ public class FxPosition extends Position {
 	private boolean executeTrade(TradeType tradeType, Num price, Num amount, String symbol) {
 		TradeRequest request = new TradeRequest();
 		request.setOpenPrice(price.doubleValue());
-		request.setVolume(amount.intValue());
+		request.setVolume(amount.doubleValue());
 		request.setSymbol(symbol);
 		if (tradeType.equals(TradeType.BUY)) {
 			order = TradeUtil.createLimitBuyOrder(request);

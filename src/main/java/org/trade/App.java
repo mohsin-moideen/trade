@@ -97,7 +97,7 @@ public class App {
 
 		System.out.println("******************** Initialization complete **********************");
 
-		for (int i = 0; i < 15; i++) {
+		for (int i = 0; i < 60; i++) {
 			Thread.sleep(60000);
 			updateSeries(series, SYMBOL, timeframe);
 			Num lastClosePrice = series.getLastBar().getClosePrice();
