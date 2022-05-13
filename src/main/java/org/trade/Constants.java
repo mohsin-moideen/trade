@@ -12,6 +12,7 @@ public class Constants {
 			+ "Xz9tJ4uDHJgadn-WO7GefanH84QTfzsD0bHU3mWmr5LFG5e6l2Sm4xGJM71iEWO6Y7eHAaCI_2gaMueuM0i7exIWwb6lbLqq-_KCA95X7nCZpQiSE7AHxSsV6Qom-821Nbzp"
 			+ "bny72Ea98wyKr_AnPZ8HI_rBhaxbTOo";
 	public static String META_API_BASE_PATH_SERVER = "https://mt-client-api-v1.london.agiliumtrade.ai";
+	public static String META_API_SERVER_REGION = "london";
 	public static String META_API_BASE_PATH_STATS = "https://metastats-api-v1.london.agiliumtrade.ai";
 	public static String META_API_BASE_PATH_HISTORIC_DATA = "https://mt-market-data-client-api-v1.london.agiliumtrade.ai";
 

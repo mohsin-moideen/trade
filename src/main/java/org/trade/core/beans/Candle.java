@@ -1,4 +1,4 @@
-package org.trade.beans;
+package org.trade.core.beans;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;

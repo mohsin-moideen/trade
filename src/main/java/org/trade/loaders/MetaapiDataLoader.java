@@ -7,9 +7,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.BaseBarSeries;
-import org.trade.beans.Candle;
+import org.trade.core.beans.Candle;
 import org.trade.enums.Timeframe;
-import org.trade.utils.meta_api.MarketData;
+import org.trade.utils.meta_api.MarketDataUtil;
 
 public class MetaapiDataLoader implements DataLoader {
 
@@ -18,7 +18,7 @@ public class MetaapiDataLoader implements DataLoader {
 	@Override
 	public BarSeries getSeries(String symbol, Integer limit, Timeframe timeframe) {
 
-		List<Candle> candles = MarketData.getHistoricCandles(symbol, timeframe, limit);
+		List<Candle> candles = MarketDataUtil.getHistoricCandles(symbol, timeframe, limit);
 		if (candles == null) {
 			log.error("Failed to init bar series! No data retrived from historical data api of meta api for symbol"
 					+ symbol);

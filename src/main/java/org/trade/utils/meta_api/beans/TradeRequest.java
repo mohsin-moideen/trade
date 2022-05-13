@@ -1,16 +1,19 @@
-package org.trade.beans.requests;
+package org.trade.utils.meta_api.beans;
 
 import org.trade.enums.TradeType;
+
+import cloud.metaapi.sdk.clients.meta_api.models.StopOptions.StopUnits;
 
 public class TradeRequest {
 
 	private TradeType actionType;
 	private String symbol;
 	private Integer volume;
+	private Double openPrice;
 	private Double stopLoss;
 	private Double takeProfit;
-	private Double stopLossUnits;
-	private Integer takeProfitUnits;
+	private StopUnits stopLossUnits;
+	private StopUnits takeProfitUnits;
 	private String clientId; // tradeId
 
 	public TradeType getActionType() {
@@ -53,19 +56,19 @@ public class TradeRequest {
 		this.takeProfit = takeProfit;
 	}
 
-	public Double getStopLossUnits() {
+	public StopUnits getStopLossUnits() {
 		return stopLossUnits;
 	}
 
-	public void setStopLossUnits(Double stopLossUnits) {
+	public void setStopLossUnits(StopUnits stopLossUnits) {
 		this.stopLossUnits = stopLossUnits;
 	}
 
-	public Integer getTakeProfitUnits() {
+	public StopUnits getTakeProfitUnits() {
 		return takeProfitUnits;
 	}
 
-	public void setTakeProfitUnits(Integer takeProfitUnits) {
+	public void setTakeProfitUnits(StopUnits takeProfitUnits) {
 		this.takeProfitUnits = takeProfitUnits;
 	}
 
@@ -75,6 +78,14 @@ public class TradeRequest {
 
 	public void setClientId(String clientId) {
 		this.clientId = clientId;
+	}
+
+	public Double getOpenPrice() {
+		return openPrice;
+	}
+
+	public void setOpenPrice(Double openPrice) {
+		this.openPrice = openPrice;
 	}
 
 	@Override

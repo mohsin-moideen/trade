@@ -8,15 +8,15 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.trade.Constants;
-import org.trade.beans.Candle;
+import org.trade.core.beans.Candle;
 import org.trade.enums.Timeframe;
 import org.trade.utils.HttpUtils;
 import org.trade.utils.JsonUtils;
 
 import com.google.gson.reflect.TypeToken;
 
-public class MarketData {
-	private static final Logger log = LogManager.getLogger(MarketData.class);
+public class MarketDataUtil {
+	private static final Logger log = LogManager.getLogger(MarketDataUtil.class);
 
 	public static List<Candle> getHistoricCandles(String symbol) {
 		return getHistoricCandles(symbol, Timeframe.one_min);
