@@ -28,7 +28,7 @@ public class OrderSynchronizationListener extends SynchronizationListener {
 			MetatraderOrder order;
 			MetaApiConnection connection = MetaApiUtil.getMetaApiConnection();
 			order = connection.getOrder(orderId).get();
-			tradingRecord.getCurrentPosition().getOrder().setPositionId(order.positionId);
+			tradingRecord.getCurrentPosition().getOrder().positionId = order.positionId;
 
 		} catch (Exception e) {
 			log.error("<<<<<<<<<<< FAILED TO UPDATE POSITION ID FOR ORDER " + orderId + " >>>>>>>>>>>>>>>>>", e);
