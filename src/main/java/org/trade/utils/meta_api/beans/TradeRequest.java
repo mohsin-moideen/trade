@@ -1,6 +1,6 @@
 package org.trade.utils.meta_api.beans;
 
-import org.trade.enums.TradeType;
+import org.ta4j.core.Trade.TradeType;
 
 import cloud.metaapi.sdk.clients.meta_api.models.StopOptions.StopUnits;
 
@@ -9,6 +9,9 @@ public class TradeRequest {
 	private TradeType actionType;
 	private String symbol;
 	private Double volume;
+	/**
+	 * If openPrice is null, order will be placed at market price
+	 */
 	private Double openPrice;
 	private Double stopLoss;
 	private Double takeProfit;
@@ -90,8 +93,8 @@ public class TradeRequest {
 
 	@Override
 	public String toString() {
-		return "TradeRequest [actionType=" + actionType + ", symbol=" + symbol + ", volume=" + volume + ", stopLoss="
-				+ stopLoss + ", takeProfit=" + takeProfit + ", stopLossUnits=" + stopLossUnits + ", takeProfitUnits="
-				+ takeProfitUnits + ", clientId=" + clientId + "]";
+		return "TradeRequest [actionType=" + actionType + ", symbol=" + symbol + ", volume=" + volume + ", openPrice="
+				+ openPrice + ", stopLoss=" + stopLoss + ", takeProfit=" + takeProfit + ", stopLossUnits="
+				+ stopLossUnits + ", takeProfitUnits=" + takeProfitUnits + ", clientId=" + clientId + "]";
 	}
 }

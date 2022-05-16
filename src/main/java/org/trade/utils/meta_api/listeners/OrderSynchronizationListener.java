@@ -5,6 +5,7 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.trade.core.FxTradingRecord;
+import org.trade.utils.JsonUtils;
 import org.trade.utils.meta_api.MetaApiUtil;
 
 import cloud.metaapi.sdk.clients.meta_api.SynchronizationListener;
@@ -25,10 +26,12 @@ public class OrderSynchronizationListener extends SynchronizationListener {
 
 	@Override
 	public CompletableFuture<Void> onOrderCompleted(String instanceIndex, String orderId) {
+		log.info("Order completeted. order id " + orderId);
 		try {
 			MetatraderPosition position;
 			MetaApiConnection connection = MetaApiUtil.getMetaApiConnection();
 			position = connection.getPosition(orderId).get();
+			log.info("Position found " + JsonUtils.getString(position));
 			MetatraderTradeResponse tradeOrder = tradingRecord.getCurrentPosition().getOrder();
 			if (position != null && position.id == tradeOrder.orderId) {
 				tradeOrder.positionId = position.id;

@@ -2,19 +2,25 @@ package org.trade.core;
 
 import java.util.Objects;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.ta4j.core.Position;
 import org.ta4j.core.Trade;
 import org.ta4j.core.Trade.TradeType;
 import org.ta4j.core.cost.CostModel;
 import org.ta4j.core.num.Num;
+import org.trade.utils.meta_api.MetaApiUtil;
 import org.trade.utils.meta_api.TradeUtil;
 import org.trade.utils.meta_api.beans.TradeRequest;
 
+import cloud.metaapi.sdk.clients.meta_api.TradeException;
 import cloud.metaapi.sdk.clients.meta_api.models.MetatraderTradeResponse;
+import cloud.metaapi.sdk.meta_api.MetaApiConnection;
 
 public class FxPosition extends Position {
 
 	private static final long serialVersionUID = -916068891251660413L;
+	private static final Logger log = LogManager.getLogger(FxPosition.class);
 
 	private MetatraderTradeResponse order;
 	private FxTrade entry;
@@ -104,8 +110,9 @@ public class FxPosition extends Position {
 				throw new IllegalStateException("The index i is less than the entryTrade index");
 			}
 			trade = new FxTrade(index, startingType.complementType(), price, amount, transactionCostModel);
-			if (executeTrade(startingType.complementType(), price, amount, symbol))
-				exit = trade;
+			MetaApiConnection connection = MetaApiUtil.getMetaApiConnection();
+			connection.closePosition(order.positionId, null); // on fail exit will not be recorded. will retry.
+			exit = trade;
 		}
 		return trade;
 	}
@@ -115,11 +122,23 @@ public class FxPosition extends Position {
 		request.setOpenPrice(price.doubleValue());
 		request.setVolume(amount.doubleValue());
 		request.setSymbol(symbol);
-		if (tradeType.equals(TradeType.BUY)) {
-			order = TradeUtil.createLimitBuyOrder(request);
-		} else {
-			order = TradeUtil.createLimitSellOrder(request);
+		request.setActionType(tradeType);
+		try {
+			order = TradeUtil.createOrder(request);
+		} catch (TradeException e) {
+			// invalid price code from meta api
+			if (e.numericCode == 10015) {
+				log.error("Failed to place limit order due to invalid price", e);
+				request.setOpenPrice(null);
+				try {
+					log.info("Placing market price order!");
+					TradeUtil.createOrder(request);
+				} catch (TradeException e1) {
+					log.error("Failed to place market order", e1);
+				}
+			}
 		}
+
 		return !(order == null);
 	}
 
