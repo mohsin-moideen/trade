@@ -5,6 +5,7 @@ import java.util.concurrent.ExecutionException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ta4j.core.Trade.TradeType;
+import org.trade.utils.JsonUtils;
 import org.trade.utils.meta_api.beans.TradeRequest;
 
 import cloud.metaapi.sdk.clients.meta_api.TradeException;
@@ -52,7 +53,7 @@ public class TradeUtil {
 							tradeRequest.getOpenPrice(), stopLoss, stopLoss, null).get();
 				}
 			}
-			log.info("Order placed " + order);
+			log.info("Order placed " + JsonUtils.getString(order));
 			return order;
 		} catch (ExecutionException e) {
 			if (e.getCause() instanceof TradeException) {

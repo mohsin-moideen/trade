@@ -69,8 +69,10 @@ public class App {
 
 	private static void updateSeries(BarSeries series, String symbol, Timeframe timeframe) {
 		Candle candle = MarketDataUtil.getCurrentCandle(symbol, timeframe);
-		series.addBar(candle.getZonedDate(), candle.getOpen(), candle.getHigh(), candle.getLow(), candle.getClose(),
-				candle.getTickVolume());
+		if (candle.getZonedDate().isAfter(series.getLastBar().getEndTime())) {
+			series.addBar(candle.getZonedDate(), candle.getOpen(), candle.getHigh(), candle.getLow(), candle.getClose(),
+					candle.getTickVolume());
+		}
 	}
 
 	public static void main(String[] args) throws InterruptedException {

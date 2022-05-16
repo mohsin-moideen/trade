@@ -132,7 +132,7 @@ public class FxPosition extends Position {
 				request.setOpenPrice(null);
 				try {
 					log.info("Placing market price order!");
-					TradeUtil.createOrder(request);
+					order = TradeUtil.createOrder(request);
 				} catch (TradeException e1) {
 					log.error("Failed to place market order", e1);
 				}
