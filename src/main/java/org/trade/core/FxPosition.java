@@ -14,6 +14,7 @@ import org.trade.utils.meta_api.TradeUtil;
 import org.trade.utils.meta_api.beans.TradeRequest;
 
 import cloud.metaapi.sdk.clients.meta_api.TradeException;
+import cloud.metaapi.sdk.clients.meta_api.models.MetatraderPosition;
 import cloud.metaapi.sdk.clients.meta_api.models.MetatraderTradeResponse;
 import cloud.metaapi.sdk.meta_api.MetaApiConnection;
 
@@ -22,15 +23,15 @@ public class FxPosition extends Position {
 	private static final long serialVersionUID = -916068891251660413L;
 	private static final Logger log = LogManager.getLogger(FxPosition.class);
 
-	private MetatraderTradeResponse order;
+	private MetatraderPosition mtPosition;
 	private FxTrade entry;
 	private FxTrade exit;
 	private TradeType startingType;
 	private CostModel transactionCostModel;
 	private CostModel holdingCostModel;
 
-	public MetatraderTradeResponse getOrder() {
-		return order;
+	public MetatraderPosition getMetatraderPosition() {
+		return mtPosition;
 	}
 
 	public static long getSerialversionuid() {
@@ -111,7 +112,7 @@ public class FxPosition extends Position {
 			}
 			trade = new FxTrade(index, startingType.complementType(), price, amount, transactionCostModel);
 			MetaApiConnection connection = MetaApiUtil.getMetaApiConnection();
-			connection.closePosition(order.positionId, null); // on fail exit will not be recorded. will retry.
+			connection.closePosition(mtPosition.id, null); // on fail exit will not be recorded. will retry.
 			exit = trade;
 		}
 		return trade;
@@ -123,8 +124,9 @@ public class FxPosition extends Position {
 		request.setVolume(amount.doubleValue());
 		request.setSymbol(symbol);
 		request.setActionType(tradeType);
+		MetatraderTradeResponse createOrderResponse = null;
 		try {
-			order = TradeUtil.createOrder(request);
+			createOrderResponse = TradeUtil.createOrder(request);
 		} catch (TradeException e) {
 			// invalid price code from meta api
 			if (e.numericCode == 10015) {
@@ -132,14 +134,13 @@ public class FxPosition extends Position {
 				request.setOpenPrice(null);
 				try {
 					log.info("Placing market price order!");
-					order = TradeUtil.createOrder(request);
+					createOrderResponse = TradeUtil.createOrder(request);
 				} catch (TradeException e1) {
 					log.error("Failed to place market order", e1);
 				}
 			}
 		}
-
-		return !(order == null);
+		return !(createOrderResponse == null);
 	}
 
 	/**
@@ -164,7 +165,7 @@ public class FxPosition extends Position {
 	}
 
 	public boolean isPending() {
-		return isOpened() && order != null && order.positionId == null;
+		return isOpened() && mtPosition == null;
 	}
 
 	@Override

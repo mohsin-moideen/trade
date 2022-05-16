@@ -10,11 +10,14 @@ import org.trade.utils.meta_api.MetaApiUtil;
 
 import cloud.metaapi.sdk.clients.meta_api.SynchronizationListener;
 import cloud.metaapi.sdk.clients.meta_api.models.MetatraderPosition;
-import cloud.metaapi.sdk.clients.meta_api.models.MetatraderTradeResponse;
 import cloud.metaapi.sdk.meta_api.MetaApiConnection;
 
 public class OrderSynchronizationListener extends SynchronizationListener {
 
+	/*
+	 * change this to map of orderId, Position object. update position object when
+	 * order is updated
+	 */
 	private FxTradingRecord tradingRecord;
 
 	public OrderSynchronizationListener(FxTradingRecord tradingRecord) {
@@ -32,9 +35,9 @@ public class OrderSynchronizationListener extends SynchronizationListener {
 			MetaApiConnection connection = MetaApiUtil.getMetaApiConnection();
 			position = connection.getPosition(orderId).get();
 			log.info("Position found " + JsonUtils.getString(position));
-			MetatraderTradeResponse tradeOrder = tradingRecord.getCurrentPosition().getOrder();
-			if (position != null && position.id == tradeOrder.orderId) {
-				tradeOrder.positionId = position.id;
+			MetatraderPosition tradePosition = tradingRecord.getCurrentPosition().getMetatraderPosition();
+			if (position != null) {
+				tradePosition.id = position.id;
 			}
 
 		} catch (Exception e) {
