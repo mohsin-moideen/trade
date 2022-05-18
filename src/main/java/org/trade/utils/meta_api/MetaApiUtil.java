@@ -5,7 +5,6 @@ import org.apache.logging.log4j.Logger;
 import org.trade.Constants;
 import org.trade.utils.JsonUtils;
 
-import cloud.metaapi.sdk.clients.meta_api.SynchronizationListener;
 import cloud.metaapi.sdk.clients.meta_api.models.MetatraderAccountInformation;
 import cloud.metaapi.sdk.meta_api.MetaApi;
 import cloud.metaapi.sdk.meta_api.MetaApi.Options;
@@ -63,10 +62,6 @@ public class MetaApiUtil {
 
 	public static void initMetaApi() {
 		getMetaApiConnection();
-	}
-
-	public static void addSynchronizationListener(SynchronizationListener synchronizationListener) {
-		getMetaApiConnection().addSynchronizationListener(synchronizationListener);
 	}
 
 	public static void main(String[] args) {

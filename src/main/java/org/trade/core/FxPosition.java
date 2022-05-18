@@ -29,9 +29,22 @@ public class FxPosition extends Position {
 	private TradeType startingType;
 	private CostModel transactionCostModel;
 	private CostModel holdingCostModel;
+	private String mtOrderId;
 
-	public MetatraderPosition getMetatraderPosition() {
+	public String getMtOrderId() {
+		return mtOrderId;
+	}
+
+	public void setMtOrderId(String mtOrderId) {
+		this.mtOrderId = mtOrderId;
+	}
+
+	public MetatraderPosition getMtPosition() {
 		return mtPosition;
+	}
+
+	public void setMtPosition(MetatraderPosition mtPosition) {
+		this.mtPosition = mtPosition;
 	}
 
 	public static long getSerialversionuid() {
@@ -104,8 +117,15 @@ public class FxPosition extends Position {
 		FxTrade trade = null;
 		if (isNew()) {
 			trade = new FxTrade(index, startingType, price, amount, transactionCostModel);
-			if (executeTrade(startingType, price, amount, symbol))
-				entry = trade;
+			// redundant check to prevent multiple open orders on same entry. do not remove!
+			if (mtOrderId == null && mtPosition == null) {
+				MetatraderTradeResponse tradeOrder = executeTrade(startingType, price, amount, symbol);
+				if (tradeOrder != null) {
+					entry = trade;
+					mtOrderId = tradeOrder.orderId;
+				}
+			}
+
 		} else if (isOpened()) {
 			if (index < entry.getIndex()) {
 				throw new IllegalStateException("The index i is less than the entryTrade index");
@@ -118,7 +138,7 @@ public class FxPosition extends Position {
 		return trade;
 	}
 
-	private boolean executeTrade(TradeType tradeType, Num price, Num amount, String symbol) {
+	private MetatraderTradeResponse executeTrade(TradeType tradeType, Num price, Num amount, String symbol) {
 		TradeRequest request = new TradeRequest();
 		request.setOpenPrice(price.doubleValue());
 		request.setVolume(amount.doubleValue());
@@ -130,17 +150,34 @@ public class FxPosition extends Position {
 		} catch (TradeException e) {
 			// invalid price code from meta api
 			if (e.numericCode == 10015) {
-				log.error("Failed to place limit order due to invalid price", e);
+				log.error("Failed to place limit order due to invalid price");
 				request.setOpenPrice(null);
 				try {
 					log.info("Placing market price order!");
 					createOrderResponse = TradeUtil.createOrder(request);
+					if (createOrderResponse != null && createOrderResponse.orderId != null) {
+						try {
+							mtPosition = MetaApiUtil.getMetaApiConnection().getPosition(createOrderResponse.orderId)
+									.get();
+						} catch (Exception e1) {
+							// TODO: NOTIFY VIA SLACK IN FUTURE!!!!!!
+							log.error("<<<FAILED TO FETCH POSITON AFTER MARKET ORDER >>>");
+							log.info("Attempting to close position!");
+							try {
+								MetaApiUtil.getMetaApiConnection().closePosition(createOrderResponse.orderId, null)
+										.get();
+							} catch (Exception e2) {
+								log.error(
+										"<<<STRAY OPEN POSITION!! SHIT'S ON FIRE. FAILED TO CLOSE POSITON AFTER STRAY MARKET ORDER >>>");
+							}
+						}
+					}
 				} catch (TradeException e1) {
 					log.error("Failed to place market order", e1);
 				}
 			}
 		}
-		return !(createOrderResponse == null);
+		return createOrderResponse;
 	}
 
 	/**

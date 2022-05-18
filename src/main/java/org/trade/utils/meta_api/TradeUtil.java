@@ -25,7 +25,7 @@ public class TradeUtil {
 		}
 		MetaApiConnection connection = MetaApiUtil.getMetaApiConnection();
 		MetatraderTradeResponse order = null;
-		log.info("Placing limit buy order " + tradeRequest);
+		log.info("Placing order " + tradeRequest);
 		try {
 			StopOptions stopLoss = new StopOptions();
 			stopLoss.value = tradeRequest.getStopLoss() == null ? 0 : tradeRequest.getStopLoss();
@@ -60,7 +60,7 @@ public class TradeUtil {
 				throw (TradeException) e.getCause();
 			}
 		} catch (Exception e) {
-			log.error("Failed to create limit buy order", e);
+			log.error("Failed to create order", e);
 		}
 		return order;
 	}

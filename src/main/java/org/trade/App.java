@@ -18,6 +18,7 @@ import org.trade.loaders.MetaapiDataLoader;
 import org.trade.utils.meta_api.MarketDataUtil;
 import org.trade.utils.meta_api.MetaApiUtil;
 import org.trade.utils.meta_api.listeners.OrderSynchronizationListener;
+import org.trade.utils.meta_api.listeners.QuoteListener;
 
 /**
  * This class is an example of a dummy trading bot using ta4j.
@@ -95,7 +96,10 @@ public class App {
 		FxTradingRecord tradingRecord = new FxTradingRecord(SYMBOL);
 
 		OrderSynchronizationListener orderListener = new OrderSynchronizationListener(tradingRecord);
-		MetaApiUtil.addSynchronizationListener(orderListener);
+		MetaApiUtil.getMetaApiConnection().addSynchronizationListener(orderListener);
+
+		QuoteListener quoteListener = new QuoteListener(tradingRecord);
+		MetaApiUtil.getMetaApiConnection().addSynchronizationListener(quoteListener);
 
 		System.out.println("******************** Initialization complete **********************");
 
@@ -120,6 +124,7 @@ public class App {
 				System.out.println("Strategy should EXIT on " + endIndex);
 				boolean exited = tradingRecord.exit(endIndex, lastClosePrice, volume);
 				if (exited) {
+					quoteListener.closeCounterTrade(); // redundancy check for closing counter trade
 					Trade exit = tradingRecord.getLastExit();
 					System.out.println("Exited on " + exit.getIndex() + " (price=" + exit.getNetPrice().doubleValue()
 							+ ", amount=" + exit.getAmount().doubleValue() + ")");

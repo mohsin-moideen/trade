@@ -31,19 +31,19 @@ public class OrderSynchronizationListener extends SynchronizationListener {
 	public CompletableFuture<Void> onOrderCompleted(String instanceIndex, String orderId) {
 		log.info("Order completeted. order id " + orderId);
 		try {
-			MetatraderPosition position;
-			MetaApiConnection connection = MetaApiUtil.getMetaApiConnection();
-			position = connection.getPosition(orderId).get();
-			log.info("Position found " + JsonUtils.getString(position));
-			MetatraderPosition tradePosition = tradingRecord.getCurrentPosition().getMetatraderPosition();
-			if (position != null) {
-				tradePosition.id = position.id;
+			if (!orderId.equals(tradingRecord.getCurrentPosition().getMtOrderId())) {
+				return CompletableFuture.completedFuture(null);
 			}
-
+			MetaApiConnection connection = MetaApiUtil.getMetaApiConnection();
+			MetatraderPosition position = connection.getPosition(orderId).get();
+			log.info("Position found " + JsonUtils.getString(position));
+			tradingRecord.getCurrentPosition().setMtPosition(position);
+			log.info("Fx position updated with mt position");
 		} catch (Exception e) {
 			log.error("<<<<<<<<<<< FAILED TO UPDATE POSITION ID FOR ORDER " + orderId + " >>>>>>>>>>>>>>>>>", e);
 
 		}
 		return CompletableFuture.completedFuture(null);
 	}
+
 }
