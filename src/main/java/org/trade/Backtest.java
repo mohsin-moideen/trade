@@ -77,7 +77,7 @@ public class Backtest {
 
 	public static void main(String[] args) {
 		BarSeries series = initMovingBarSeries("EURUSD", Timeframe.one_min, 1000);
-		BarSeriesManager seriesManager = new BarSeriesManager();
+		BarSeriesManager seriesManager = new BarSeriesManager(series);
 		Strategy strategy1 = buildSMAStrategy(series);
 		TradingRecord tradingRecord1 = seriesManager.run(strategy1, TradeType.BUY, DecimalNum.valueOf(0.1));
 
@@ -85,11 +85,7 @@ public class Backtest {
 		TradingRecord tradingRecord2 = seriesManager.run(strategy2, TradeType.BUY, DecimalNum.valueOf(0.1));
 
 		AnalysisCriterion criterion = new GrossProfitCriterion();
-		System.out.println("strategy 1 profit " + criterion.calculate(series, tradingRecord1)); // Returns the result
-																								// for
-																								// strategy1
-		System.out.println("strategy 2 profit " + criterion.calculate(series, tradingRecord2)); // Returns the result
-																								// for
-																								// strategy2
+		System.out.println("strategy 1 " + (criterion.calculate(series, tradingRecord1).doubleValue() * 100000.0));
+		System.out.println("strategy 2 " + (criterion.calculate(series, tradingRecord2).doubleValue() * 100000.0));
 	}
 }
