@@ -18,6 +18,9 @@ import org.trade.enums.Timeframe;
 import org.trade.loaders.DataLoader;
 import org.trade.loaders.MetaapiDataLoader;
 
+import ta4jexamples.strategies.ADXStrategy;
+import ta4jexamples.strategies.UnstableIndicatorStrategy;
+
 public class Backtest {
 
 	private static Num LAST_BAR_CLOSE_PRICE;
@@ -78,14 +81,14 @@ public class Backtest {
 	public static void main(String[] args) {
 		BarSeries series = initMovingBarSeries("EURUSD", Timeframe.one_min, 1000);
 		BarSeriesManager seriesManager = new BarSeriesManager(series);
-		Strategy strategy1 = buildSMAStrategy(series);
+		Strategy strategy1 = ADXStrategy.buildStrategy(series);
 		TradingRecord tradingRecord1 = seriesManager.run(strategy1, TradeType.BUY, DecimalNum.valueOf(0.1));
 
-		Strategy strategy2 = buildSMAStrategy2(series);
+		Strategy strategy2 = UnstableIndicatorStrategy.buildStrategy(series);
 		TradingRecord tradingRecord2 = seriesManager.run(strategy2, TradeType.BUY, DecimalNum.valueOf(0.1));
 
 		AnalysisCriterion criterion = new GrossProfitCriterion();
-		System.out.println("strategy 1 " + (criterion.calculate(series, tradingRecord1).doubleValue() * 100000.0));
-		System.out.println("strategy 2 " + (criterion.calculate(series, tradingRecord2).doubleValue() * 100000.0));
+		System.out.println("strategy 1 " + (criterion.calculate(series, tradingRecord1).doubleValue()));
+		System.out.println("strategy 2 " + (criterion.calculate(series, tradingRecord2).doubleValue()));
 	}
 }
