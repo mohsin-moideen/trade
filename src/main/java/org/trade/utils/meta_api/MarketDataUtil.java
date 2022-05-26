@@ -35,13 +35,13 @@ public class MarketDataUtil {
 	}
 
 	public static List<Candle> getHistoricCandles(String symbol, Timeframe timeframe, Date startDate, Integer limit) {
-		if (limit > 1000)
+		if (limit > 1000) {
 			limit = 1000; // max limit is 1000
+		}
 		final String historicCandlesEndpoint = Constants.HISTORIC_DATA_ENDPOINT.replace("{symbol}", symbol)
-				.replace("{timeframe}", timeframe.toString());
+				.replace("{timeframe}", timeframe.toString()) + "?limit=" + limit;
 		HttpGet request = new HttpGet(historicCandlesEndpoint);
 		request.addHeader("auth-token", Constants.META_API_API_KEY);
-
 		List<Candle> historicCandles = null;
 		try {
 			String response = HttpUtils.getStringResponse(request);

@@ -38,7 +38,7 @@ public class PriceListener extends SynchronizationListener {
 	public CompletableFuture<Void> onSymbolPriceUpdated(String instanceIndex, MetatraderSymbolPrice price) {
 		if (!price.symbol.equals(symbol))
 			return CompletableFuture.completedFuture(null);
-		log.info(price.symbol + " price updated " + JsonUtils.getString(price));
+		log.debug(price.symbol + " price updated " + JsonUtils.getString(price));
 		Double currentPrice;
 		if (tradeType == TradeType.BUY) {
 			currentPrice = price.bid;

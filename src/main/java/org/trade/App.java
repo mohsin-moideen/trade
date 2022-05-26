@@ -43,7 +43,7 @@ public class App {
 		BarSeries series = dataLoader.getSeries(symbol, maxBarCount, timeframe);
 		System.out.print("Initial bar count: " + series.getBarCount());
 		// Limitating the number of bars to maxBarCount
-		series.setMaximumBarCount(maxBarCount);
+		series.setMaximumBarCount(1500);
 		LAST_BAR_CLOSE_PRICE = series.getBar(series.getEndIndex()).getClosePrice();
 		System.out.println(" (limited to " + maxBarCount + "), close price = " + LAST_BAR_CLOSE_PRICE);
 		return series;
@@ -59,7 +59,7 @@ public class App {
 		}
 
 		ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
-		SMAIndicator sma = new SMAIndicator(closePrice, 12);
+		SMAIndicator sma = new SMAIndicator(closePrice, 2);
 
 		// Signals
 		// Buy when SMA goes over close price
@@ -87,7 +87,7 @@ public class App {
 		MetaApiUtil.initMetaApi();
 
 		// Getting the bar series
-		BarSeries series = initMovingBarSeries(SYMBOL, timeframe, 100);
+		BarSeries series = initMovingBarSeries(SYMBOL, timeframe, 500);
 
 		// Building the trading strategy
 		Strategy strategy = buildStrategy(series);
@@ -112,7 +112,6 @@ public class App {
 			int endIndex = series.getEndIndex();
 			if (strategy.shouldEnter(endIndex)) {
 				// Our strategy should enter
-				System.out.println("Strategy should ENTER on " + endIndex);
 				boolean entered = tradingRecord.enter(endIndex, lastClosePrice, volume);
 				if (entered) {
 					Trade entry = tradingRecord.getLastEntry();

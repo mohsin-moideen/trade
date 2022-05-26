@@ -37,12 +37,16 @@ public class QuoteListener extends SynchronizationListener {
 			return CompletableFuture.completedFuture(null);
 		log.info(price.symbol + " price updated " + JsonUtils.getString(price));
 		Double currentPrice;
+		Double counterOrderPrice;
+
 		TradeType actionType;
 		if (tradeType == TradeType.BUY) {
 			currentPrice = price.bid;
+			counterOrderPrice = price.ask;
 			actionType = TradeType.SELL;
 		} else {
 			currentPrice = price.ask;
+			counterOrderPrice = price.bid;
 			actionType = TradeType.BUY;
 		}
 		log.info("currentPrice = " + currentPrice);
@@ -53,7 +57,7 @@ public class QuoteListener extends SynchronizationListener {
 
 		log.info("current profit = " + currentProfit);
 		if (openPosition != null && counterPosition == null) {
-			if (currentProfit <= -1.5) {
+			if (currentProfit <= -1) {
 				counterPosition = new MetatraderPosition();// blocking duplicate counter trade creation
 				log.info("placing counter trade");
 				TradeRequest tradeRequest = new TradeRequest();
@@ -73,7 +77,10 @@ public class QuoteListener extends SynchronizationListener {
 				}
 			}
 		} else if (openPosition != null && counterPosition != null) {
-			if (currentProfit >= -0.5) {
+			double counterOrderProfit = (counterOrderPrice - counterPosition.openPrice)
+					* (counterPosition.volume * 100000);
+			log.info("counter Order  profit = " + counterOrderProfit);
+			if (counterOrderProfit <= -0.2) {
 				log.info("closing counter trade");
 				MetaApiUtil.getMetaApiConnection().closePosition(counterPosition.id, null);
 				counterPosition = null; // clearing counter position to open if price falls
