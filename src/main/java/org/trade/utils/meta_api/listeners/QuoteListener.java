@@ -69,7 +69,7 @@ public class QuoteListener extends SynchronizationListener {
 					}
 				} catch (Exception e) {
 					log.error("Failed to place counter trade", e);
-					counterPosition = null;// blocking counter trade creation due to failure
+					counterPosition = null;// unblocking counter trade creation due to failure
 				}
 			}
 		} else if (openPosition != null && counterPosition != null) {

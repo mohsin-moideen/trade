@@ -18,6 +18,7 @@ import org.trade.loaders.MetaapiDataLoader;
 import org.trade.utils.meta_api.MarketDataUtil;
 import org.trade.utils.meta_api.MetaApiUtil;
 import org.trade.utils.meta_api.listeners.OrderSynchronizationListener;
+import org.trade.utils.meta_api.listeners.PriceListener;
 import org.trade.utils.meta_api.listeners.QuoteListener;
 
 /**
@@ -80,7 +81,6 @@ public class App {
 		final String SYMBOL = "EURUSD";
 		final Timeframe timeframe = Timeframe.one_min;
 		final Num volume = DecimalNum.valueOf(0.1);
-
 		System.out.println("********************** Initialization **********************");
 
 		// Init meta api and get connection
@@ -93,19 +93,19 @@ public class App {
 		Strategy strategy = buildStrategy(series);
 
 		// Initializing the trading history
+		// default starting type is buy
 		FxTradingRecord tradingRecord = new FxTradingRecord(SYMBOL);
 
-		OrderSynchronizationListener orderListener = new OrderSynchronizationListener(tradingRecord);
-		MetaApiUtil.getMetaApiConnection().addSynchronizationListener(orderListener);
-
+		MetaApiUtil.getMetaApiConnection().addSynchronizationListener(new OrderSynchronizationListener(tradingRecord));
 		QuoteListener quoteListener = new QuoteListener(tradingRecord);
 		MetaApiUtil.getMetaApiConnection().addSynchronizationListener(quoteListener);
+		MetaApiUtil.getMetaApiConnection()
+				.addSynchronizationListener(new PriceListener(series, SYMBOL, tradingRecord.getStartingType()));
 
 		System.out.println("******************** Initialization complete **********************");
 
 		for (int i = 0; i < 60; i++) {
-			Thread.sleep(60000);
-			updateSeries(series, SYMBOL, timeframe);
+			// updateSeries(series, SYMBOL, timeframe);
 			Num lastClosePrice = series.getLastBar().getClosePrice();
 			System.out.println("------------------------------------------------------\n" + "Bar " + i
 					+ " added, close price = " + lastClosePrice);
@@ -130,6 +130,7 @@ public class App {
 							+ ", amount=" + exit.getAmount().doubleValue() + ")");
 				}
 			}
+			Thread.sleep(60000);
 		}
 	}
 }
