@@ -54,6 +54,7 @@ public class QuoteListener extends SynchronizationListener {
 		log.info("current profit = " + currentProfit);
 		if (openPosition != null && counterPosition == null) {
 			if (currentProfit <= -1.5) {
+				counterPosition = new MetatraderPosition();// blocking duplicate counter trade creation
 				log.info("placing counter trade");
 				TradeRequest tradeRequest = new TradeRequest();
 				tradeRequest.setActionType(actionType);
@@ -68,6 +69,7 @@ public class QuoteListener extends SynchronizationListener {
 					}
 				} catch (Exception e) {
 					log.error("Failed to place counter trade", e);
+					counterPosition = null;// blocking counter trade creation due to failure
 				}
 			}
 		} else if (openPosition != null && counterPosition != null) {
