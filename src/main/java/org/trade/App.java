@@ -21,6 +21,8 @@ import org.trade.utils.meta_api.listeners.OrderSynchronizationListener;
 import org.trade.utils.meta_api.listeners.PriceListener;
 import org.trade.utils.meta_api.listeners.QuoteListener;
 
+import ta4jexamples.strategies.UnstableIndicatorStrategy;
+
 /**
  * This class is an example of a dummy trading bot using ta4j.
  * <p/>
@@ -59,7 +61,7 @@ public class App {
 		}
 
 		ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
-		SMAIndicator sma = new SMAIndicator(closePrice, 2);
+		SMAIndicator sma = new SMAIndicator(closePrice, 12);
 
 		// Signals
 		// Buy when SMA goes over close price
@@ -90,7 +92,7 @@ public class App {
 		BarSeries series = initMovingBarSeries(SYMBOL, timeframe, 500);
 
 		// Building the trading strategy
-		Strategy strategy = buildStrategy(series);
+		Strategy strategy = UnstableIndicatorStrategy.buildStrategy(series);// buildStrategy(series);
 
 		// Initializing the trading history
 		// default starting type is buy
@@ -104,7 +106,7 @@ public class App {
 
 		System.out.println("******************** Initialization complete **********************");
 
-		for (int i = 0; i < 60; i++) {
+		for (int i = 0; i < 1200; i++) {
 			// updateSeries(series, SYMBOL, timeframe);
 			Num lastClosePrice = series.getLastBar().getClosePrice();
 			System.out.println("------------------------------------------------------\n" + "Bar " + i
