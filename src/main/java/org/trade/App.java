@@ -21,8 +21,6 @@ import org.trade.utils.meta_api.listeners.OrderSynchronizationListener;
 import org.trade.utils.meta_api.listeners.PriceListener;
 import org.trade.utils.meta_api.listeners.QuoteListener;
 
-import ta4jexamples.strategies.UnstableIndicatorStrategy;
-
 /**
  * This class is an example of a dummy trading bot using ta4j.
  * <p/>
@@ -92,7 +90,7 @@ public class App {
 		BarSeries series = initMovingBarSeries(SYMBOL, timeframe, 500);
 
 		// Building the trading strategy
-		Strategy strategy = UnstableIndicatorStrategy.buildStrategy(series);// buildStrategy(series);
+		Strategy strategy = buildStrategy(series);// buildStrategy(series);
 
 		// Initializing the trading history
 		// default starting type is buy
@@ -112,7 +110,7 @@ public class App {
 			System.out.println("------------------------------------------------------\n" + "Bar " + i
 					+ " added, close price = " + lastClosePrice);
 			int endIndex = series.getEndIndex();
-			if (strategy.shouldEnter(endIndex)) {
+			if (true || strategy.shouldEnter(endIndex)) {
 				// Our strategy should enter
 				boolean entered = tradingRecord.enter(endIndex, lastClosePrice, volume);
 				if (entered) {
