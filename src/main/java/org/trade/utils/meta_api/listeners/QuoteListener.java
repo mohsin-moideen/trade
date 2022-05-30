@@ -26,7 +26,7 @@ public class QuoteListener extends SynchronizationListener {
 	private MetatraderPosition counterPosition;
 	private FxTradingRecord tradingRecord;
 	private double triggerMultiplier;
-	private static Queue<Double> prices;
+	private Queue<Double> prices;
 
 	public QuoteListener(FxTradingRecord tradingRecord) {
 		super();
@@ -37,7 +37,7 @@ public class QuoteListener extends SynchronizationListener {
 	}
 
 	private void initTriggerPoints() {
-		triggerMultiplier = 1;
+		triggerMultiplier = 4;
 	}
 
 	private static final Logger log = LogManager.getLogger(QuoteListener.class);
@@ -67,12 +67,12 @@ public class QuoteListener extends SynchronizationListener {
 		log.debug("openPosition.volume = " + openPosition.volume);
 		double currentProfit = getProfit(openPosition.openPrice, openPosition.volume, currentPrice, LOT_SIZE,
 				tradeType);
-		currentProfit = Math.round(currentProfit * 100.0) / 100.0;
+		currentProfit = roundOff(currentProfit, 2);
 
 		log.info("current profit = " + currentProfit);
 		if (openPosition != null && counterPosition == null) {
 			double triggerLoss = getCounterTradeTriggerLoss(openPosition.volume);
-			log.info("counter order trigger Price = " + triggerLoss);
+			log.info("counter order trigger loss = " + triggerLoss);
 			if (currentProfit <= triggerLoss) {
 				counterPosition = new MetatraderPosition();// blocking duplicate counter trade creation
 				log.info("placing counter trade");
@@ -87,6 +87,7 @@ public class QuoteListener extends SynchronizationListener {
 						counterPosition = MetaApiUtil.getMetaApiConnection().getPosition(counterOrder.orderId).get();
 						log.info("Counter position retrieved " + JsonUtils.getString(counterPosition));
 						triggerMultiplier += 0.5;
+						prices.clear();
 					}
 				} catch (Exception e) {
 					log.error("Failed to place counter trade", e);
@@ -94,16 +95,22 @@ public class QuoteListener extends SynchronizationListener {
 				}
 			}
 		} else if (openPosition != null && counterPosition != null) {
-			double counterOrderProfit = getProfit(counterPosition.openPrice, counterPosition.volume, currentPrice,
+			double counterOrderProfit = getProfit(counterPosition.openPrice, counterPosition.volume, counterOrderPrice,
 					LOT_SIZE, actionType);
 			log.info("counter Order  profit = " + counterOrderProfit);
 			if (shouldCloseCounterTrade(counterOrderProfit, actionType)) {
 				log.info("closing counter trade");
 				MetaApiUtil.getMetaApiConnection().closePosition(counterPosition.id, null);
 				counterPosition = null; // clearing counter position to open if price falls
+				prices.clear();
 			}
 		}
 		return CompletableFuture.completedFuture(null);
+	}
+
+	private static double roundOff(double number, int points) {
+		double equilizer = Math.pow(10, points);
+		return Math.round(number * equilizer) / equilizer;
 	}
 
 	private boolean shouldCloseCounterTrade(double counterOrderProfit, TradeType actionType) {
@@ -115,31 +122,34 @@ public class QuoteListener extends SynchronizationListener {
 	}
 
 	public static void main(String[] args) {
-		prices = new CircularFifoQueue<Double>(10);
-		prices.add(1.0);
-		prices.add(0.5);
-		prices.add(1.3);
-		prices.add(0.7);
-		prices.add(1.2);
-		prices.add(1.1);
-		prices.add(1.5);
-		prices.add(1.4);
-		System.out.println(isBullish());
+//		prices = new CircularFifoQueue<Double>(10);
+//		prices.add(1.0512);
+//		prices.add(0.0522);
+//		prices.add(1.0502);
+//		prices.add(0.0522);
+//		prices.add(1.0502);
+//		prices.add(1.0498);
+//		prices.add(1.0488);
+//		prices.add(1.0498);
+//		System.out.println(isBullish());
 	}
 
-	private static boolean isBullish() {
+	private boolean isBullish() {
 		double trend = 0.0;
 		List<Double> priceList = new LinkedList<>(prices);
+		System.out.print(roundOff(priceList.get(0), 5) + ", ");
 		for (int i = 1; i < priceList.size(); i++) {
 			trend += (priceList.get(i) - priceList.get(i - 1));
+			System.out.print(roundOff(priceList.get(i), 5) + ", ");
 		}
-		log.info("Trend = " + trend);
+		System.out.println();
+		log.info("Trend = " + roundOff(trend, 5));
 		return trend > 0;
 	}
 
 	// Talk to roof about this
 	private double getCounterTradeTriggerLoss(double volume) {
-		return Math.min((10 * volume * triggerMultiplier), (100 * volume));
+		return -Math.min((10 * volume * triggerMultiplier), (100 * volume));
 	}
 
 	private double getProfit(double openPrice, double volume, Double currentPrice, final int lotSize,
