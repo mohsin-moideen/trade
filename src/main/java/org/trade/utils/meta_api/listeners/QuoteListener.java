@@ -27,13 +27,17 @@ public class QuoteListener extends SynchronizationListener {
 	private FxTradingRecord tradingRecord;
 	private double triggerMultiplier;
 	private Queue<Double> prices;
+	private static final int PRICES_COUNT = 25;
+	final int LOT_SIZE;
 
 	public QuoteListener(FxTradingRecord tradingRecord) {
 		super();
 		this.tradingRecord = tradingRecord;
 		this.tradeType = tradingRecord.getStartingType();
 		initTriggerPoints();
-		prices = new CircularFifoQueue<Double>(10);
+		prices = new CircularFifoQueue<Double>(PRICES_COUNT);
+		LOT_SIZE = 100000; // TODO: get from meta api for other pairs
+
 	}
 
 	private void initTriggerPoints() {
@@ -50,7 +54,6 @@ public class QuoteListener extends SynchronizationListener {
 		log.info(price.symbol + " price updated " + JsonUtils.getString(price));
 		Double currentPrice;
 		Double counterOrderPrice;
-		final int LOT_SIZE = 100000; // TODO: get from meta api for other pairs
 		TradeType actionType;
 		if (tradeType == TradeType.BUY) {
 			currentPrice = price.bid;
@@ -65,8 +68,7 @@ public class QuoteListener extends SynchronizationListener {
 		log.debug("currentPrice = " + currentPrice);
 		log.debug("openPosition.openPrice = " + openPosition.openPrice);
 		log.debug("openPosition.volume = " + openPosition.volume);
-		double currentProfit = getProfit(openPosition.openPrice, openPosition.volume, currentPrice, LOT_SIZE,
-				tradeType);
+		double currentProfit = getProfit(openPosition.openPrice, openPosition.volume, currentPrice, tradeType);
 		currentProfit = roundOff(currentProfit, 2);
 
 		log.info("current profit = " + currentProfit);
@@ -86,7 +88,7 @@ public class QuoteListener extends SynchronizationListener {
 						log.info("Counter order placed " + JsonUtils.getString(counterOrder));
 						counterPosition = MetaApiUtil.getMetaApiConnection().getPosition(counterOrder.orderId).get();
 						log.info("Counter position retrieved " + JsonUtils.getString(counterPosition));
-						triggerMultiplier += 0.5;
+						triggerMultiplier *= 1.5;
 						prices.clear();
 					}
 				} catch (Exception e) {
@@ -95,10 +97,8 @@ public class QuoteListener extends SynchronizationListener {
 				}
 			}
 		} else if (openPosition != null && counterPosition != null) {
-			double counterOrderProfit = getProfit(counterPosition.openPrice, counterPosition.volume, counterOrderPrice,
-					LOT_SIZE, actionType);
-			log.info("counter Order  profit = " + counterOrderProfit);
-			if (shouldCloseCounterTrade(counterOrderProfit, actionType)) {
+
+			if (shouldCloseCounterTrade(counterPosition, actionType, counterOrderPrice)) {
 				log.info("closing counter trade");
 				MetaApiUtil.getMetaApiConnection().closePosition(counterPosition.id, null);
 				counterPosition = null; // clearing counter position to open if price falls
@@ -113,12 +113,23 @@ public class QuoteListener extends SynchronizationListener {
 		return Math.round(number * equilizer) / equilizer;
 	}
 
-	private boolean shouldCloseCounterTrade(double counterOrderProfit, TradeType actionType) {
+	private boolean shouldCloseCounterTrade(MetatraderPosition counterPosition, TradeType actionType,
+			double counterOrderPrice) {
+		double counterOrderProfit = getProfit(counterPosition.openPrice, counterPosition.volume, counterOrderPrice,
+				actionType);
+		log.info("counter Order  profit = " + counterOrderProfit);
+		if (counterOrderProfit < -(counterPosition.volume * 10) * 2) {
+			return true;
+		}
 		if (actionType == TradeType.BUY)
-			return counterOrderProfit <= 0.2 && prices.size() == 10 && !isBullish();
+			return isIncounterOrderProfitRange(counterOrderProfit) && !isBullish();
 		else
-			return counterOrderProfit <= 0.2 && prices.size() == 10 && isBullish();
+			return isIncounterOrderProfitRange(counterOrderProfit) && isBullish();
 
+	}
+
+	private boolean isIncounterOrderProfitRange(double counterOrderProfit) {
+		return counterOrderProfit >= 0 && counterOrderProfit <= 0.2 && prices.size() >= PRICES_COUNT;
 	}
 
 	public static void main(String[] args) {
@@ -132,6 +143,9 @@ public class QuoteListener extends SynchronizationListener {
 //		prices.add(1.0488);
 //		prices.add(1.0498);
 //		System.out.println(isBullish());
+		Queue<Double> prices = new CircularFifoQueue<Double>(PRICES_COUNT);
+		prices.add(1.0);
+		System.out.println(prices.size());
 	}
 
 	private boolean isBullish() {
@@ -152,12 +166,11 @@ public class QuoteListener extends SynchronizationListener {
 		return -Math.min((10 * volume * triggerMultiplier), (100 * volume));
 	}
 
-	private double getProfit(double openPrice, double volume, Double currentPrice, final int lotSize,
-			TradeType tradeType) {
+	private double getProfit(double openPrice, double volume, Double currentPrice, TradeType tradeType) {
 		if (tradeType == TradeType.BUY)
-			return (currentPrice - openPrice) * (volume * lotSize);
+			return (currentPrice - openPrice) * (volume * LOT_SIZE);
 		else
-			return (openPrice - currentPrice) * (volume * lotSize);
+			return (openPrice - currentPrice) * (volume * LOT_SIZE);
 	}
 
 	/**

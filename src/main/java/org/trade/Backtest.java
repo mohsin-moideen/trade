@@ -23,6 +23,8 @@ import org.trade.enums.Timeframe;
 import org.trade.loaders.DataLoader;
 import org.trade.loaders.MetaapiDataLoader;
 
+import ta4jexamples.strategies.UnstableIndicatorStrategy;
+
 public class Backtest {
 
 	private static Num LAST_BAR_CLOSE_PRICE;
@@ -100,12 +102,12 @@ public class Backtest {
 	}
 
 	public static void main(String[] args) {
-		BarSeries series = initMovingBarSeries("EURUSD", Timeframe.one_day, 100);
+		BarSeries series = initMovingBarSeries("EURUSD", Timeframe.one_min, 1000);
 		BarSeriesManager seriesManager = new BarSeriesManager(series);
 		Strategy strategy1 = buildSMAStrategy2(series);
 		TradingRecord tradingRecord1 = seriesManager.run(strategy1, TradeType.BUY, DecimalNum.valueOf(10000));
 
-		Strategy strategy2 = buildSMAStrategy(series);
+		Strategy strategy2 = UnstableIndicatorStrategy.buildStrategy(series);
 		TradingRecord tradingRecord2 = seriesManager.run(strategy2, TradeType.BUY, DecimalNum.valueOf(10000));
 
 		AnalysisCriterion criterion = new GrossProfitCriterion();

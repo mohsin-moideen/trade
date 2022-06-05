@@ -1,75 +1,43 @@
 package org.trade;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.ta4j.core.BarSeries;
-import org.ta4j.core.BaseStrategy;
 import org.ta4j.core.Strategy;
 import org.ta4j.core.Trade;
-import org.ta4j.core.indicators.SMAIndicator;
-import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
-import org.ta4j.core.num.DecimalNum;
 import org.ta4j.core.num.Num;
-import org.ta4j.core.rules.OverIndicatorRule;
-import org.ta4j.core.rules.UnderIndicatorRule;
 import org.trade.core.FxTradingRecord;
 import org.trade.core.beans.Candle;
 import org.trade.enums.Timeframe;
-import org.trade.loaders.DataLoader;
-import org.trade.loaders.MetaapiDataLoader;
 import org.trade.utils.meta_api.MarketDataUtil;
 import org.trade.utils.meta_api.MetaApiUtil;
 import org.trade.utils.meta_api.listeners.OrderSynchronizationListener;
-import org.trade.utils.meta_api.listeners.PriceListener;
 import org.trade.utils.meta_api.listeners.QuoteListener;
 
 /**
  * This class is an example of a dummy trading bot using ta4j.
  * <p/>
  */
-public class App {
+public class App implements Runnable {
 
-	/**
-	 * Close price of the last bar
-	 */
-	private static Num LAST_BAR_CLOSE_PRICE;
+	private static final Logger log = LogManager.getLogger(App.class);
 
-	/**
-	 * Builds a moving bar series (i.e. keeping only the maxBarCount last bars)
-	 *
-	 * @param maxBarCount the number of bars to keep in the bar series (at maximum)
-	 * @return a moving bar series
-	 */
-	private static BarSeries initMovingBarSeries(String symbol, Timeframe timeframe, int maxBarCount) {
-		DataLoader dataLoader = new MetaapiDataLoader();
-		BarSeries series = dataLoader.getSeries(symbol, maxBarCount, timeframe);
-		System.out.print("Initial bar count: " + series.getBarCount());
-		// Limitating the number of bars to maxBarCount
-		series.setMaximumBarCount(1500);
-		LAST_BAR_CLOSE_PRICE = series.getBar(series.getEndIndex()).getClosePrice();
-		System.out.println(" (limited to " + maxBarCount + "), close price = " + LAST_BAR_CLOSE_PRICE);
-		return series;
+	private String symbol;
+	private Timeframe timeframe;
+	private Num volume;
+	private BarSeries series;
+	private Strategy strategy;
+
+	public App(String symbol, Timeframe timeframe, Num volume, BarSeries series, Strategy strategy) {
+		super();
+		this.symbol = symbol;
+		this.timeframe = timeframe;
+		this.volume = volume;
+		this.series = series;
+		this.strategy = strategy;
 	}
 
-	/**
-	 * @param series a bar series
-	 * @return a dummy strategy
-	 */
-	private static Strategy buildStrategy(BarSeries series) {
-		if (series == null) {
-			throw new IllegalArgumentException("Series cannot be null");
-		}
-
-		ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
-		SMAIndicator sma = new SMAIndicator(closePrice, 12);
-
-		// Signals
-		// Buy when SMA goes over close price
-		// Sell when close price goes over SMA
-		Strategy buySellSignals = new BaseStrategy(new OverIndicatorRule(sma, closePrice),
-				new UnderIndicatorRule(sma, closePrice));
-		return buySellSignals;
-	}
-
-	private static void updateSeries(BarSeries series, String symbol, Timeframe timeframe) {
+	private void updateSeries() {
 		Candle candle = MarketDataUtil.getCurrentCandle(symbol, timeframe);
 		if (candle.getZonedDate().isAfter(series.getLastBar().getEndTime())) {
 			series.addBar(candle.getZonedDate(), candle.getOpen(), candle.getHigh(), candle.getLow(), candle.getClose(),
@@ -77,59 +45,55 @@ public class App {
 		}
 	}
 
-	public static void main(String[] args) throws InterruptedException {
-		final String SYMBOL = "EURUSD";
-		final Timeframe timeframe = Timeframe.one_min;
-		final Num volume = DecimalNum.valueOf(0.1);
-		System.out.println("********************** Initialization **********************");
+	@Override
+	public void run() {
+		// initLogger();
+		log.info("********************** Initialization **********************");
 
 		// Init meta api and get connection
 		MetaApiUtil.initMetaApi();
 
-		// Getting the bar series
-		BarSeries series = initMovingBarSeries(SYMBOL, timeframe, 500);
-
-		// Building the trading strategy
-		Strategy strategy = buildStrategy(series);// buildStrategy(series);
-
-		// Initializing the trading history
 		// default starting type is buy
-		FxTradingRecord tradingRecord = new FxTradingRecord(SYMBOL);
+		FxTradingRecord tradingRecord = new FxTradingRecord(symbol);
 
 		MetaApiUtil.getMetaApiConnection().addSynchronizationListener(new OrderSynchronizationListener(tradingRecord));
 		QuoteListener quoteListener = new QuoteListener(tradingRecord);
 		MetaApiUtil.getMetaApiConnection().addSynchronizationListener(quoteListener);
-		MetaApiUtil.getMetaApiConnection()
-				.addSynchronizationListener(new PriceListener(series, SYMBOL, tradingRecord.getStartingType()));
+//		MetaApiUtil.getMetaApiConnection()
+//				.addSynchronizationListener(new PriceListener(series, SYMBOL, tradingRecord.getStartingType()));
 
-		System.out.println("******************** Initialization complete **********************");
+		log.info("******************** Initialization complete **********************");
 
-		for (int i = 0; i < 1200; i++) {
-			// updateSeries(series, SYMBOL, timeframe);
+		while (true) {
+			updateSeries();
 			Num lastClosePrice = series.getLastBar().getClosePrice();
-			System.out.println("------------------------------------------------------\n" + "Bar " + i
-					+ " added, close price = " + lastClosePrice);
+			log.info("------------------------------------------------------\n" + "Bar added, close price = "
+					+ lastClosePrice);
 			int endIndex = series.getEndIndex();
-			if (true || strategy.shouldEnter(endIndex)) {
+			if (strategy.shouldEnter(endIndex)) {
 				// Our strategy should enter
 				boolean entered = tradingRecord.enter(endIndex, lastClosePrice, volume);
 				if (entered) {
 					Trade entry = tradingRecord.getLastEntry();
-					System.out.println("Entered on " + entry.getIndex() + " (price=" + entry.getNetPrice().doubleValue()
+					log.info("Entered on " + entry.getIndex() + " (price=" + entry.getNetPrice().doubleValue()
 							+ ", amount=" + entry.getAmount().doubleValue() + ")");
 				}
 			} else if (strategy.shouldExit(endIndex)) {
 				// Our strategy should exit
-				System.out.println("Strategy should EXIT on " + endIndex);
+				log.info("Strategy should EXIT on " + endIndex);
 				boolean exited = tradingRecord.exit(endIndex, lastClosePrice, volume);
 				if (exited) {
 					quoteListener.closeCounterTrade(); // redundancy check for closing counter trade
 					Trade exit = tradingRecord.getLastExit();
-					System.out.println("Exited on " + exit.getIndex() + " (price=" + exit.getNetPrice().doubleValue()
+					log.info("Exited on " + exit.getIndex() + " (price=" + exit.getNetPrice().doubleValue()
 							+ ", amount=" + exit.getAmount().doubleValue() + ")");
 				}
 			}
-			Thread.sleep(60000);
+			try {
+				Thread.sleep(Timeframe.getMintues(timeframe) * 60000);
+			} catch (InterruptedException e) {
+				log.error(e.getMessage(), e);
+			}
 		}
 	}
 }

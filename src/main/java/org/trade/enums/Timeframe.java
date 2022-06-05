@@ -15,4 +15,27 @@ public enum Timeframe {
 		return this.value;
 	}
 
+	public static int getMintues(Timeframe timeframe) {
+		switch (timeframe) {
+		case fifteen_min:
+			return 15;
+		case five_min:
+			return 5;
+		case four_hour:
+			return 4 * 60;
+		case one_day:
+			return 24 * 60;
+		case one_hour:
+			return 60;
+		case one_min:
+			return 1;
+		case thirty_min:
+			return 30;
+		case twelve_hour:
+			return 12 * 60;
+		default:
+			return 0;
+		}
+	}
+
 }
