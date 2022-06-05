@@ -20,9 +20,10 @@ public class OrderSynchronizationListener extends SynchronizationListener {
 	 */
 	private FxTradingRecord tradingRecord;
 
-	public OrderSynchronizationListener(FxTradingRecord tradingRecord) {
+	public OrderSynchronizationListener(FxTradingRecord tradingRecord, String threadName) {
 		super();
 		this.tradingRecord = tradingRecord;
+		Thread.currentThread().setName(threadName);
 	}
 
 	private static final Logger log = LogManager.getLogger(OrderSynchronizationListener.class);

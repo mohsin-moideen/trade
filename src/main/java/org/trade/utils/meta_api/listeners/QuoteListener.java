@@ -30,13 +30,14 @@ public class QuoteListener extends SynchronizationListener {
 	private static final int PRICES_COUNT = 25;
 	final int LOT_SIZE;
 
-	public QuoteListener(FxTradingRecord tradingRecord) {
+	public QuoteListener(FxTradingRecord tradingRecord, String threadName) {
 		super();
 		this.tradingRecord = tradingRecord;
 		this.tradeType = tradingRecord.getStartingType();
 		initTriggerPoints();
 		prices = new CircularFifoQueue<Double>(PRICES_COUNT);
 		LOT_SIZE = 100000; // TODO: get from meta api for other pairs
+		Thread.currentThread().setName(threadName);
 
 	}
 

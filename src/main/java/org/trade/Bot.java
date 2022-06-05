@@ -28,7 +28,7 @@ public class Bot {
 
 	public static void main(String[] args) {
 		final String SYMBOL_EURUSD = "EURUSD";
-		final Timeframe timeframe = Timeframe.one_min;
+		final Timeframe timeframe = Timeframe.five_min;
 		final Num volume = DecimalNum.valueOf(0.1);
 		BarSeries eurusdSeries = initMovingBarSeries(SYMBOL_EURUSD, timeframe, 1000);
 		Strategy unstableIndicatorStrategy = UnstableIndicatorStrategy.buildStrategy(eurusdSeries);

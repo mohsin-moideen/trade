@@ -56,8 +56,9 @@ public class App implements Runnable {
 		// default starting type is buy
 		FxTradingRecord tradingRecord = new FxTradingRecord(symbol);
 
-		MetaApiUtil.getMetaApiConnection().addSynchronizationListener(new OrderSynchronizationListener(tradingRecord));
-		QuoteListener quoteListener = new QuoteListener(tradingRecord);
+		MetaApiUtil.getMetaApiConnection().addSynchronizationListener(
+				new OrderSynchronizationListener(tradingRecord, Thread.currentThread().getName()));
+		QuoteListener quoteListener = new QuoteListener(tradingRecord, Thread.currentThread().getName());
 		MetaApiUtil.getMetaApiConnection().addSynchronizationListener(quoteListener);
 //		MetaApiUtil.getMetaApiConnection()
 //				.addSynchronizationListener(new PriceListener(series, SYMBOL, tradingRecord.getStartingType()));
