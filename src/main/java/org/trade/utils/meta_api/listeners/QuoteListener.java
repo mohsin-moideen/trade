@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import org.ta4j.core.Trade.TradeType;
 import org.trade.core.FxTradingRecord;
 import org.trade.utils.JsonUtils;
+import org.trade.utils.TelegramUtils;
 import org.trade.utils.meta_api.MetaApiUtil;
 import org.trade.utils.meta_api.TradeUtil;
 import org.trade.utils.meta_api.beans.TradeRequest;
@@ -29,6 +30,7 @@ public class QuoteListener extends SynchronizationListener {
 	private Queue<Double> prices;
 	private static final int PRICES_COUNT = 25;
 	final int LOT_SIZE;
+	private String threadName;
 
 	public QuoteListener(FxTradingRecord tradingRecord, String threadName) {
 		super();
@@ -37,8 +39,7 @@ public class QuoteListener extends SynchronizationListener {
 		initTriggerPoints();
 		prices = new CircularFifoQueue<Double>(PRICES_COUNT);
 		LOT_SIZE = 100000; // TODO: get from meta api for other pairs
-		Thread.currentThread().setName(threadName);
-
+		this.threadName = threadName;
 	}
 
 	private void initTriggerPoints() {
@@ -52,7 +53,8 @@ public class QuoteListener extends SynchronizationListener {
 		MetatraderPosition openPosition = tradingRecord.getCurrentPosition().getMtPosition();
 		if (openPosition == null || !price.symbol.equals(openPosition.symbol)) // symbol check for redundancy
 			return CompletableFuture.completedFuture(null);
-		log.info(price.symbol + " price updated " + JsonUtils.getString(price));
+		Thread.currentThread().setName(threadName);
+		log.debug(price.symbol + " price updated " + JsonUtils.getString(price));
 		Double currentPrice;
 		Double counterOrderPrice;
 		TradeType actionType;
@@ -72,10 +74,10 @@ public class QuoteListener extends SynchronizationListener {
 		double currentProfit = getProfit(openPosition.openPrice, openPosition.volume, currentPrice, tradeType);
 		currentProfit = roundOff(currentProfit, 2);
 
-		log.info("current profit = " + currentProfit);
+		log.debug("current profit = " + currentProfit);
 		if (openPosition != null && counterPosition == null) {
 			double triggerLoss = getCounterTradeTriggerLoss(openPosition.volume);
-			log.info("counter order trigger loss = " + triggerLoss);
+			log.debug("counter order trigger loss = " + triggerLoss);
 			if (currentProfit <= triggerLoss) {
 				counterPosition = new MetatraderPosition();// blocking duplicate counter trade creation
 				log.info("placing counter trade");
@@ -90,7 +92,11 @@ public class QuoteListener extends SynchronizationListener {
 						counterPosition = MetaApiUtil.getMetaApiConnection().getPosition(counterOrder.orderId).get();
 						log.info("Counter position retrieved " + JsonUtils.getString(counterPosition));
 						triggerMultiplier *= 1.5;
+						log.info("counter order trigger loss updated to "
+								+ getCounterTradeTriggerLoss(openPosition.volume));
 						prices.clear();
+						TelegramUtils.sendMessage("Counter trade opened\nStrategy: " + Thread.currentThread().getName()
+								+ "\nPosition type: " + actionType + "\nEntry price: " + counterPosition.openPrice);
 					}
 				} catch (Exception e) {
 					log.error("Failed to place counter trade", e);
@@ -104,6 +110,8 @@ public class QuoteListener extends SynchronizationListener {
 				MetaApiUtil.getMetaApiConnection().closePosition(counterPosition.id, null);
 				counterPosition = null; // clearing counter position to open if price falls
 				prices.clear();
+				TelegramUtils.sendMessage("Counter trade closed\nStrategy: " + Thread.currentThread().getName()
+						+ "\nPosition type: " + actionType + "\nEntry price: " + counterOrderPrice);
 			}
 		}
 		return CompletableFuture.completedFuture(null);

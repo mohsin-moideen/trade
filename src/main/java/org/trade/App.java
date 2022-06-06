@@ -9,6 +9,7 @@ import org.ta4j.core.num.Num;
 import org.trade.core.FxTradingRecord;
 import org.trade.core.beans.Candle;
 import org.trade.enums.Timeframe;
+import org.trade.utils.TelegramUtils;
 import org.trade.utils.meta_api.MarketDataUtil;
 import org.trade.utils.meta_api.MetaApiUtil;
 import org.trade.utils.meta_api.listeners.OrderSynchronizationListener;
@@ -27,6 +28,7 @@ public class App implements Runnable {
 	private Num volume;
 	private BarSeries series;
 	private Strategy strategy;
+	private boolean forcedExit;
 
 	public App(String symbol, Timeframe timeframe, Num volume, BarSeries series, Strategy strategy) {
 		super();
@@ -35,10 +37,17 @@ public class App implements Runnable {
 		this.volume = volume;
 		this.series = series;
 		this.strategy = strategy;
+		forcedExit = false;
 	}
 
 	private void updateSeries() {
 		Candle candle = MarketDataUtil.getCurrentCandle(symbol, timeframe);
+		// null check for candle - happens when meta api is down!!
+		if (candle == null) {
+			forcedExit = true;
+			log.error("Failed to fetch candle data from Meta api./n Exiting all trades!");
+			return;
+		}
 		if (candle.getZonedDate().isAfter(series.getLastBar().getEndTime())) {
 			series.addBar(candle.getZonedDate(), candle.getOpen(), candle.getHigh(), candle.getLow(), candle.getClose(),
 					candle.getTickVolume());
@@ -68,8 +77,7 @@ public class App implements Runnable {
 		while (true) {
 			updateSeries();
 			Num lastClosePrice = series.getLastBar().getClosePrice();
-			log.info("------------------------------------------------------\n" + "Bar added, close price = "
-					+ lastClosePrice);
+			log.info("Bar added, close price = " + lastClosePrice);
 			int endIndex = series.getEndIndex();
 			if (strategy.shouldEnter(endIndex)) {
 				// Our strategy should enter
@@ -78,8 +86,12 @@ public class App implements Runnable {
 					Trade entry = tradingRecord.getLastEntry();
 					log.info("Entered on " + entry.getIndex() + " (price=" + entry.getNetPrice().doubleValue()
 							+ ", amount=" + entry.getAmount().doubleValue() + ")");
+					TelegramUtils.sendMessage("Position entered\nStrategy: " + Thread.currentThread().getName()
+							+ "\nPosition type: " + tradingRecord.getStartingType() + "\nEntry price: "
+							+ entry.getNetPrice().doubleValue());
 				}
-			} else if (strategy.shouldExit(endIndex)) {
+			}
+			if (strategy.shouldExit(endIndex) || forcedExit) {
 				// Our strategy should exit
 				log.info("Strategy should EXIT on " + endIndex);
 				boolean exited = tradingRecord.exit(endIndex, lastClosePrice, volume);
@@ -88,6 +100,9 @@ public class App implements Runnable {
 					Trade exit = tradingRecord.getLastExit();
 					log.info("Exited on " + exit.getIndex() + " (price=" + exit.getNetPrice().doubleValue()
 							+ ", amount=" + exit.getAmount().doubleValue() + ")");
+					TelegramUtils.sendMessage("Position exited\nStrategy: " + Thread.currentThread().getName()
+							+ "\nPosition type: " + tradingRecord.getStartingType() + "\nExit price: "
+							+ exit.getNetPrice().doubleValue());
 				}
 			}
 			try {

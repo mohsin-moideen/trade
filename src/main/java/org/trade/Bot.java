@@ -20,6 +20,7 @@ import org.trade.loaders.DataLoader;
 import org.trade.loaders.MetaapiDataLoader;
 
 import ta4jexamples.strategies.ADXStrategy;
+import ta4jexamples.strategies.RSI2Strategy;
 import ta4jexamples.strategies.UnstableIndicatorStrategy;
 
 public class Bot {
@@ -33,12 +34,15 @@ public class Bot {
 		BarSeries eurusdSeries = initMovingBarSeries(SYMBOL_EURUSD, timeframe, 1000);
 		Strategy unstableIndicatorStrategy = UnstableIndicatorStrategy.buildStrategy(eurusdSeries);
 		Strategy adxStrategy = ADXStrategy.buildStrategy(eurusdSeries);
+		Strategy rsi2Strategy = RSI2Strategy.buildStrategy(eurusdSeries);
 
 		List<StrategyConfig> strategyConfigs = new LinkedList<>();
 		strategyConfigs.add(new StrategyConfig("EURUSD-unstableIndcator", SYMBOL_EURUSD, timeframe, volume,
 				eurusdSeries, unstableIndicatorStrategy));
 		strategyConfigs.add(
 				new StrategyConfig("EURUSD-adxStrategy", SYMBOL_EURUSD, timeframe, volume, eurusdSeries, adxStrategy));
+		strategyConfigs.add(new StrategyConfig("EURUSD-rsi2Strategy", SYMBOL_EURUSD, timeframe, volume, eurusdSeries,
+				rsi2Strategy));
 		for (StrategyConfig strategyConfig : strategyConfigs) {
 			Thread app = new Thread(new App(strategyConfig.getSymbol(), strategyConfig.getTimeframe(),
 					strategyConfig.getVolume(), strategyConfig.getSeries(), strategyConfig.getStrategy()));

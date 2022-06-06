@@ -145,38 +145,36 @@ public class FxPosition extends Position {
 		request.setSymbol(symbol);
 		request.setActionType(tradeType);
 		MetatraderTradeResponse createOrderResponse = null;
+//		try {
+//			createOrderResponse = TradeUtil.createOrder(request);
+//		} catch (TradeException e) {
+//			// invalid price code from meta api
+//			if (e.numericCode == 10015) {
+//		log.error("Failed to place limit order due to invalid price");
+		request.setOpenPrice(null);
 		try {
+			log.info("Placing market price order!");
 			createOrderResponse = TradeUtil.createOrder(request);
-		} catch (TradeException e) {
-			// invalid price code from meta api
-			if (e.numericCode == 10015) {
-				log.error("Failed to place limit order due to invalid price");
-				request.setOpenPrice(null);
+			if (createOrderResponse != null && createOrderResponse.orderId != null) {
 				try {
-					log.info("Placing market price order!");
-					createOrderResponse = TradeUtil.createOrder(request);
-					if (createOrderResponse != null && createOrderResponse.orderId != null) {
-						try {
-							mtPosition = MetaApiUtil.getMetaApiConnection().getPosition(createOrderResponse.orderId)
-									.get();
-						} catch (Exception e1) {
-							// TODO: NOTIFY VIA SLACK IN FUTURE!!!!!!
-							log.error("<<<FAILED TO FETCH POSITON AFTER MARKET ORDER >>>");
-							log.info("Attempting to close position!");
-							try {
-								MetaApiUtil.getMetaApiConnection().closePosition(createOrderResponse.orderId, null)
-										.get();
-							} catch (Exception e2) {
-								log.error(
-										"<<<STRAY OPEN POSITION!! SHIT'S ON FIRE. FAILED TO CLOSE POSITON AFTER STRAY MARKET ORDER >>>");
-							}
-						}
+					mtPosition = MetaApiUtil.getMetaApiConnection().getPosition(createOrderResponse.orderId).get();
+				} catch (Exception e1) {
+					// TODO: NOTIFY VIA SLACK IN FUTURE!!!!!!
+					log.error("<<<FAILED TO FETCH POSITON AFTER MARKET ORDER >>>");
+					log.info("Attempting to close position!");
+					try {
+						MetaApiUtil.getMetaApiConnection().closePosition(createOrderResponse.orderId, null).get();
+					} catch (Exception e2) {
+						log.error(
+								"<<<STRAY OPEN POSITION!! SHIT'S ON FIRE. FAILED TO CLOSE POSITON AFTER STRAY MARKET ORDER >>>");
 					}
-				} catch (TradeException e1) {
-					log.error("Failed to place market order", e1);
 				}
 			}
+		} catch (TradeException e1) {
+			log.error("Failed to place market order", e1);
 		}
+//			}
+//		}
 		return createOrderResponse;
 	}
 

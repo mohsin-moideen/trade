@@ -19,7 +19,7 @@ public class HttpUtils {
 		CloseableHttpClient httpClient = HttpClients.createDefault();
 		CloseableHttpResponse response = httpClient.execute(request);
 		HttpEntity entity = response.getEntity();
-		log.info("response headers from " + request.getURI() + " = " + response.getAllHeaders());
+		log.debug("response headers from " + request.getURI() + " = " + JsonUtils.getString(response.getAllHeaders()));
 		return EntityUtils.toString(entity);
 	}
 }
