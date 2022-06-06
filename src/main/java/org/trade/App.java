@@ -90,8 +90,7 @@ public class App implements Runnable {
 							+ "\nPosition type: " + tradingRecord.getStartingType() + "\nEntry price: "
 							+ entry.getNetPrice().doubleValue());
 				}
-			}
-			if (strategy.shouldExit(endIndex) || forcedExit) {
+			} else if (strategy.shouldExit(endIndex) || forcedExit) {
 				// Our strategy should exit
 				log.info("Strategy should EXIT on " + endIndex);
 				boolean exited = tradingRecord.exit(endIndex, lastClosePrice, volume);
