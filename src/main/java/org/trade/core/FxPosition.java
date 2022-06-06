@@ -9,6 +9,7 @@ import org.ta4j.core.Trade;
 import org.ta4j.core.Trade.TradeType;
 import org.ta4j.core.cost.CostModel;
 import org.ta4j.core.num.Num;
+import org.trade.utils.TelegramUtils;
 import org.trade.utils.meta_api.MetaApiUtil;
 import org.trade.utils.meta_api.TradeUtil;
 import org.trade.utils.meta_api.beans.TradeRequest;
@@ -159,14 +160,23 @@ public class FxPosition extends Position {
 				try {
 					mtPosition = MetaApiUtil.getMetaApiConnection().getPosition(createOrderResponse.orderId).get();
 				} catch (Exception e1) {
-					// TODO: NOTIFY VIA SLACK IN FUTURE!!!!!!
 					log.error("<<<FAILED TO FETCH POSITON AFTER MARKET ORDER >>>");
 					log.info("Attempting to close position!");
+					TelegramUtils.sendMessage("⚠️⚠️⚠️⚠️⚠️ FAILED TO FETCH POSITON AFTER MARKET ORDER ⚠️⚠️⚠️⚠️⚠️");
+					TelegramUtils.sendMessage(
+							"⚠️⚠️⚠️⚠️⚠️ Possible stray positions! Please close all trades and restart trading bot ⚠️⚠️⚠️⚠️⚠️");
+
 					try {
 						MetaApiUtil.getMetaApiConnection().closePosition(createOrderResponse.orderId, null).get();
 					} catch (Exception e2) {
 						log.error(
 								"<<<STRAY OPEN POSITION!! SHIT'S ON FIRE. FAILED TO CLOSE POSITON AFTER STRAY MARKET ORDER >>>");
+
+						TelegramUtils
+								.sendMessage("⚠️⚠️⚠️⚠️⚠️  FAILED TO CLOSE POSITON AFTER STRAY MARKET ORDER ⚠️⚠️⚠️⚠️⚠️");
+						TelegramUtils.sendMessage(
+								"⚠️⚠️⚠️⚠️⚠️ Possible stray positions! Please close all trades and restart trading bot ⚠️⚠️⚠️⚠️⚠️");
+
 					}
 				}
 			}

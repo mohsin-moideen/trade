@@ -46,6 +46,12 @@ public class App implements Runnable {
 		if (candle == null) {
 			forcedExit = true;
 			log.error("Failed to fetch candle data from Meta api./n Exiting all trades!");
+			TelegramUtils.sendMessage(
+					"⚠️⚠️⚠️⚠️⚠️  Failed to fetch candle data from Meta api./nExiting all trades! ⚠️⚠️⚠️⚠️⚠️");
+			TelegramUtils.sendMessage(
+					"⚠️⚠️⚠️⚠️⚠️  Please check your trading account to ensure all trades have been closed! ⚠️⚠️⚠️⚠️⚠️");
+			TelegramUtils.sendMessage("⚠️⚠️⚠️⚠️⚠️  Please do not ignore this message! ⚠️⚠️⚠️⚠️⚠️");
+
 			return;
 		}
 		if (candle.getZonedDate().isAfter(series.getLastBar().getEndTime())) {
@@ -101,7 +107,10 @@ public class App implements Runnable {
 							+ ", amount=" + exit.getAmount().doubleValue() + ")");
 					TelegramUtils.sendMessage("Position exited\nStrategy: " + Thread.currentThread().getName()
 							+ "\nPosition type: " + tradingRecord.getStartingType() + "\nExit price: "
-							+ exit.getNetPrice().doubleValue());
+							+ exit.getNetPrice().doubleValue() + "\n Profit: "
+							+ quoteListener.getProfit(tradingRecord.getLastEntry().getNetPrice().doubleValue(),
+									volume.doubleValue(), exit.getNetPrice().doubleValue(),
+									tradingRecord.getStartingType()));
 				}
 			}
 			try {

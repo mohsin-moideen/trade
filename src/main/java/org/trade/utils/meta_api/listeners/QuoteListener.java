@@ -67,6 +67,7 @@ public class QuoteListener extends SynchronizationListener {
 			counterOrderPrice = price.bid;
 			actionType = TradeType.BUY;
 		}
+		counterPosition.currentPrice = counterOrderPrice;
 		prices.add(currentPrice);
 		log.debug("currentPrice = " + currentPrice);
 		log.debug("openPosition.openPrice = " + openPosition.openPrice);
@@ -106,12 +107,7 @@ public class QuoteListener extends SynchronizationListener {
 		} else if (openPosition != null && counterPosition != null) {
 
 			if (shouldCloseCounterTrade(counterPosition, actionType, counterOrderPrice)) {
-				log.info("closing counter trade");
-				MetaApiUtil.getMetaApiConnection().closePosition(counterPosition.id, null);
-				counterPosition = null; // clearing counter position to open if price falls
-				prices.clear();
-				TelegramUtils.sendMessage("Counter trade closed\nStrategy: " + Thread.currentThread().getName()
-						+ "\nPosition type: " + actionType + "\nEntry price: " + counterOrderPrice);
+				closeCounterTrade();
 			}
 		}
 		return CompletableFuture.completedFuture(null);
@@ -175,7 +171,7 @@ public class QuoteListener extends SynchronizationListener {
 		return -Math.min((10 * volume * triggerMultiplier), (100 * volume));
 	}
 
-	private double getProfit(double openPrice, double volume, Double currentPrice, TradeType tradeType) {
+	public double getProfit(Double openPrice, Double volume, Double currentPrice, TradeType tradeType) {
 		if (tradeType == TradeType.BUY)
 			return (currentPrice - openPrice) * (volume * LOT_SIZE);
 		else
@@ -192,8 +188,14 @@ public class QuoteListener extends SynchronizationListener {
 		if (counterPosition == null)
 			return true;
 		else {
+			log.info("closing counter trade");
 			MetaApiUtil.getMetaApiConnection().closePosition(counterPosition.id, null);
-			counterPosition = null;
+			prices.clear();
+			TelegramUtils.sendMessage("Counter trade closed\nStrategy: " + Thread.currentThread().getName()
+					+ "\nPosition type: " + tradeType.complementType() + "\nExit price: " + counterPosition.currentPrice
+					+ "\nCounter trade profit: " + getProfit(counterPosition.openPrice, counterPosition.volume,
+							counterPosition.currentPrice, tradeType.complementType()));
+			counterPosition = null; // clearing counter position to open if price falls
 		}
 		return false;
 	}
