@@ -1,4 +1,4 @@
-package org.trade;
+package org.trade.config;
 
 public class Constants {
 

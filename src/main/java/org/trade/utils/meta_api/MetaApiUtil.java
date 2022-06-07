@@ -2,7 +2,7 @@ package org.trade.utils.meta_api;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.trade.Constants;
+import org.trade.config.Constants;
 import org.trade.utils.JsonUtils;
 
 import cloud.metaapi.sdk.clients.meta_api.models.MetatraderAccountInformation;

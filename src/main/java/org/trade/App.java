@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Strategy;
 import org.ta4j.core.Trade;
+import org.ta4j.core.Trade.TradeType;
 import org.ta4j.core.num.Num;
 import org.trade.core.FxTradingRecord;
 import org.trade.core.beans.Candle;
@@ -29,14 +30,17 @@ public class App implements Runnable {
 	private BarSeries series;
 	private Strategy strategy;
 	private boolean isServiceUnavailable;
+	private TradeType tradeType;
 
-	public App(String symbol, Timeframe timeframe, Num volume, BarSeries series, Strategy strategy) {
+	public App(String symbol, Timeframe timeframe, Num volume, BarSeries series, Strategy strategy,
+			TradeType tradeType) {
 		super();
 		this.symbol = symbol;
 		this.timeframe = timeframe;
 		this.volume = volume;
 		this.series = series;
 		this.strategy = strategy;
+		this.tradeType = tradeType;
 		isServiceUnavailable = false;
 	}
 
@@ -77,7 +81,7 @@ public class App implements Runnable {
 		MetaApiUtil.initMetaApi();
 
 		// default starting type is buy
-		FxTradingRecord tradingRecord = new FxTradingRecord(symbol);
+		FxTradingRecord tradingRecord = new FxTradingRecord(symbol, tradeType);
 
 		MetaApiUtil.getMetaApiConnection().addSynchronizationListener(
 				new OrderSynchronizationListener(tradingRecord, Thread.currentThread().getName()));

@@ -2,6 +2,7 @@ package org.trade.core.beans;
 
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Strategy;
+import org.ta4j.core.Trade.TradeType;
 import org.ta4j.core.num.Num;
 import org.trade.enums.Timeframe;
 
@@ -12,6 +13,7 @@ public class StrategyConfig {
 	private Num volume;
 	private BarSeries series;
 	private Strategy strategy;
+	private TradeType tradeType;
 
 	public String getSymbol() {
 		return symbol;
@@ -61,14 +63,16 @@ public class StrategyConfig {
 		this.name = name;
 	}
 
-	@Override
-	public String toString() {
-		return "StrategyConfig [symbol=" + symbol + ", timeframe=" + timeframe + ", volume=" + volume + ", series="
-				+ series + ", strategy=" + strategy + "]";
+	public TradeType getTradeType() {
+		return tradeType;
+	}
+
+	public void setTradeType(TradeType tradeType) {
+		this.tradeType = tradeType;
 	}
 
 	public StrategyConfig(String name, String symbol, Timeframe timeframe, Num volume, BarSeries series,
-			Strategy strategy) {
+			Strategy strategy, TradeType tradeType) {
 		super();
 		this.name = name;
 		this.symbol = symbol;
@@ -76,6 +80,13 @@ public class StrategyConfig {
 		this.volume = volume;
 		this.series = series;
 		this.strategy = strategy;
+		this.tradeType = tradeType;
+	}
+
+	@Override
+	public String toString() {
+		return "StrategyConfig [name=" + name + ", symbol=" + symbol + ", timeframe=" + timeframe + ", volume=" + volume
+				+ ", series=" + series + ", strategy=" + strategy + ", tradeType=" + tradeType + "]";
 	}
 
 }

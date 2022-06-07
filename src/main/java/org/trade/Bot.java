@@ -6,14 +6,10 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ta4j.core.BarSeries;
-import org.ta4j.core.BaseStrategy;
 import org.ta4j.core.Strategy;
-import org.ta4j.core.indicators.SMAIndicator;
-import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
+import org.ta4j.core.Trade.TradeType;
 import org.ta4j.core.num.DecimalNum;
 import org.ta4j.core.num.Num;
-import org.ta4j.core.rules.OverIndicatorRule;
-import org.ta4j.core.rules.UnderIndicatorRule;
 import org.trade.core.beans.StrategyConfig;
 import org.trade.enums.Timeframe;
 import org.trade.loaders.DataLoader;
@@ -38,14 +34,15 @@ public class Bot {
 
 		List<StrategyConfig> strategyConfigs = new LinkedList<>();
 		strategyConfigs.add(new StrategyConfig("EURUSD-unstableIndcator", SYMBOL_EURUSD, timeframe, volume,
-				eurusdSeries, unstableIndicatorStrategy));
-		strategyConfigs.add(
-				new StrategyConfig("EURUSD-adxStrategy", SYMBOL_EURUSD, timeframe, volume, eurusdSeries, adxStrategy));
+				eurusdSeries, unstableIndicatorStrategy, TradeType.BUY));
+		strategyConfigs.add(new StrategyConfig("EURUSD-adxStrategy", SYMBOL_EURUSD, timeframe, volume, eurusdSeries,
+				adxStrategy, TradeType.BUY));
 		strategyConfigs.add(new StrategyConfig("EURUSD-rsi2Strategy", SYMBOL_EURUSD, timeframe, volume, eurusdSeries,
-				rsi2Strategy));
+				rsi2Strategy, TradeType.BUY));
 		for (StrategyConfig strategyConfig : strategyConfigs) {
-			Thread app = new Thread(new App(strategyConfig.getSymbol(), strategyConfig.getTimeframe(),
-					strategyConfig.getVolume(), strategyConfig.getSeries(), strategyConfig.getStrategy()));
+			Thread app = new Thread(
+					new App(strategyConfig.getSymbol(), strategyConfig.getTimeframe(), strategyConfig.getVolume(),
+							strategyConfig.getSeries(), strategyConfig.getStrategy(), strategyConfig.getTradeType()));
 			app.setName(strategyConfig.getName());
 			app.start();
 		}
@@ -61,31 +58,11 @@ public class Bot {
 		DataLoader dataLoader = new MetaapiDataLoader();
 		BarSeries series = dataLoader.getSeries(symbol, maxBarCount, timeframe);
 		log.info("Initial bar count: " + series.getBarCount());
-		// Limitating the number of bars to maxBarCount
+		// Limiting the number of bars to maxBarCount
 		series.setMaximumBarCount(1500);
 		Num LAST_BAR_CLOSE_PRICE = series.getBar(series.getEndIndex()).getClosePrice();
 		log.info(" (limited to " + maxBarCount + "), close price = " + LAST_BAR_CLOSE_PRICE);
 		return series;
-	}
-
-	/**
-	 * @param series a bar series
-	 * @return a dummy strategy
-	 */
-	private static Strategy buildSmaStrategy(BarSeries series) {
-		if (series == null) {
-			throw new IllegalArgumentException("Series cannot be null");
-		}
-
-		ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
-		SMAIndicator sma = new SMAIndicator(closePrice, 12);
-
-		// Signals
-		// Buy when SMA goes over close price
-		// Sell when close price goes over SMA
-		Strategy buySellSignals = new BaseStrategy(new OverIndicatorRule(sma, closePrice),
-				new UnderIndicatorRule(sma, closePrice));
-		return buySellSignals;
 	}
 
 }

@@ -7,7 +7,7 @@ import java.util.List;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.trade.Constants;
+import org.trade.config.Constants;
 import org.trade.core.beans.Candle;
 import org.trade.enums.Timeframe;
 import org.trade.utils.HttpUtils;
