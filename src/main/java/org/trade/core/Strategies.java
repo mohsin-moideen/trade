@@ -38,7 +38,7 @@ public class Strategies {
 		RSIIndicator rsiIndicator = new RSIIndicator(closePrice, 14);
 		Rule entry = new CrossedDownIndicatorRule(macdIndicator.getShortTermEma(), macdIndicator.getLongTermEma())
 				.and(new CrossedDownIndicatorRule(rsiIndicator, 70));
-		Rule exit = new StopGainRule(closePrice, .1);
+		Rule exit = new StopGainRule(closePrice, .15);
 		Strategy strategy = new BaseStrategy(entry, exit);
 		return strategy;
 	}
@@ -49,7 +49,7 @@ public class Strategies {
 		VWAPIndicator vwapIndicator = new VWAPIndicator(series, 14);
 		EMAIndicator emaIndicator = new EMAIndicator(closePrice, 9);
 		Rule entryRule = new CrossedUpIndicatorRule(emaIndicator, vwapIndicator);
-		Rule exitRule = new StopGainRule(closePrice, .2);
+		Rule exitRule = new StopGainRule(closePrice, .15);
 		BaseStrategy strategy = new BaseStrategy(entryRule, exitRule);
 		return strategy;
 	}

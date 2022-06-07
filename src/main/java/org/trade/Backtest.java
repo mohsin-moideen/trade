@@ -36,7 +36,7 @@ public class Backtest {
 	}
 
 	public static void main(String[] args) {
-		BarSeries series = initMovingBarSeries("EURUSD", Timeframe.five_min, 12 * 24 * 10);
+		BarSeries series = initMovingBarSeries("GBPUSD", Timeframe.fifteen_min, 4 * 24 * 10);
 		BarSeriesManager seriesManager = new BarSeriesManager(series);
 		Strategy strategy1 = Strategies.getVwap9EmaBuyStrategy(series);
 		Strategy strategy2 = Strategies.getVwap9EmaSellStrategy(series);

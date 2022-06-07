@@ -10,14 +10,11 @@ import org.ta4j.core.Strategy;
 import org.ta4j.core.Trade.TradeType;
 import org.ta4j.core.num.DecimalNum;
 import org.ta4j.core.num.Num;
+import org.trade.core.Strategies;
 import org.trade.core.beans.StrategyConfig;
 import org.trade.enums.Timeframe;
 import org.trade.loaders.DataLoader;
 import org.trade.loaders.MetaapiDataLoader;
-
-import ta4jexamples.strategies.ADXStrategy;
-import ta4jexamples.strategies.RSI2Strategy;
-import ta4jexamples.strategies.UnstableIndicatorStrategy;
 
 public class Bot {
 
@@ -25,20 +22,30 @@ public class Bot {
 
 	public static void main(String[] args) {
 		final String SYMBOL_EURUSD = "EURUSD";
-		final Timeframe timeframe = Timeframe.five_min;
-		final Num volume = DecimalNum.valueOf(0.1);
+		final String SYMBOL_GBPUSD = "GBPUSD";
+
+		final Timeframe timeframe = Timeframe.fifteen_min;
+		final Num volume = DecimalNum.valueOf(0.2);
 		BarSeries eurusdSeries = initMovingBarSeries(SYMBOL_EURUSD, timeframe, 1000);
-		Strategy unstableIndicatorStrategy = UnstableIndicatorStrategy.buildStrategy(eurusdSeries);
-		Strategy adxStrategy = ADXStrategy.buildStrategy(eurusdSeries);
-		Strategy rsi2Strategy = RSI2Strategy.buildStrategy(eurusdSeries);
+		Strategy strategy1 = Strategies.getVwap9EmaBuyStrategy(eurusdSeries);
+		Strategy strategy2 = Strategies.getVwap9EmaSellStrategy(eurusdSeries);
+
+		BarSeries gbpusdSeries = initMovingBarSeries(SYMBOL_GBPUSD, timeframe, 1000);
+		Strategy strategy3 = Strategies.getVwap9EmaBuyStrategy(eurusdSeries);
+		Strategy strategy4 = Strategies.getVwap9EmaSellStrategy(eurusdSeries);
 
 		List<StrategyConfig> strategyConfigs = new LinkedList<>();
-		strategyConfigs.add(new StrategyConfig("EURUSD-unstableIndcator", SYMBOL_EURUSD, timeframe, volume,
-				eurusdSeries, unstableIndicatorStrategy, TradeType.BUY));
-		strategyConfigs.add(new StrategyConfig("EURUSD-adxStrategy", SYMBOL_EURUSD, timeframe, volume, eurusdSeries,
-				adxStrategy, TradeType.BUY));
-		strategyConfigs.add(new StrategyConfig("EURUSD-rsi2Strategy", SYMBOL_EURUSD, timeframe, volume, eurusdSeries,
-				rsi2Strategy, TradeType.BUY));
+
+		strategyConfigs.add(new StrategyConfig("EURUSD-Vwap9EmaBuy", SYMBOL_EURUSD, timeframe, volume, eurusdSeries,
+				strategy1, TradeType.BUY));
+		strategyConfigs.add(new StrategyConfig("EURUSD-Vwap9EmaSell", SYMBOL_EURUSD, timeframe, volume, eurusdSeries,
+				strategy2, TradeType.SELL));
+
+		strategyConfigs.add(new StrategyConfig("GBPUSD-Vwap9EmaBuy", SYMBOL_GBPUSD, timeframe, volume, gbpusdSeries,
+				strategy3, TradeType.BUY));
+		strategyConfigs.add(new StrategyConfig("GBPUSD-Vwap9EmaSell", SYMBOL_GBPUSD, timeframe, volume, gbpusdSeries,
+				strategy4, TradeType.SELL));
+
 		for (StrategyConfig strategyConfig : strategyConfigs) {
 			Thread app = new Thread(
 					new App(strategyConfig.getSymbol(), strategyConfig.getTimeframe(), strategyConfig.getVolume(),
