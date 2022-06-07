@@ -173,9 +173,9 @@ public class QuoteListener extends SynchronizationListener {
 
 	public double getProfit(Double openPrice, Double volume, Double currentPrice, TradeType tradeType) {
 		if (tradeType == TradeType.BUY)
-			return (currentPrice - openPrice) * (volume * LOT_SIZE);
+			return roundOff((currentPrice - openPrice) * (volume * LOT_SIZE), 2);
 		else
-			return (openPrice - currentPrice) * (volume * LOT_SIZE);
+			return roundOff((openPrice - currentPrice) * (volume * LOT_SIZE), 2);
 	}
 
 	/**
@@ -193,7 +193,7 @@ public class QuoteListener extends SynchronizationListener {
 			prices.clear();
 			TelegramUtils.sendMessage("Counter trade closed\nStrategy: " + Thread.currentThread().getName()
 					+ "\nPosition type: " + tradeType.complementType() + "\nExit price: " + counterPosition.currentPrice
-					+ "\nCounter trade profit: " + getProfit(counterPosition.openPrice, counterPosition.volume,
+					+ "\nCounter trade profit: $" + getProfit(counterPosition.openPrice, counterPosition.volume,
 							counterPosition.currentPrice, tradeType.complementType()));
 			counterPosition = null; // clearing counter position to open if price falls
 		}

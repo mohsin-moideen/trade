@@ -28,7 +28,7 @@ public class App implements Runnable {
 	private Num volume;
 	private BarSeries series;
 	private Strategy strategy;
-	private boolean forcedExit;
+	private boolean isServiceUnavailable;
 
 	public App(String symbol, Timeframe timeframe, Num volume, BarSeries series, Strategy strategy) {
 		super();
@@ -37,26 +37,34 @@ public class App implements Runnable {
 		this.volume = volume;
 		this.series = series;
 		this.strategy = strategy;
-		forcedExit = false;
+		isServiceUnavailable = false;
 	}
 
 	private void updateSeries() {
 		Candle candle = MarketDataUtil.getCurrentCandle(symbol, timeframe);
 		// null check for candle - happens when meta api is down!!
 		if (candle == null) {
-			forcedExit = true;
+			isServiceUnavailable = true;
 			log.error("Failed to fetch candle data from Meta api./n Exiting all trades!");
 			TelegramUtils.sendMessage(
-					"⚠️⚠️⚠️⚠️⚠️  Failed to fetch candle data from Meta api./nExiting all trades! ⚠️⚠️⚠️⚠️⚠️");
+					"⚠️⚠️⚠️⚠️⚠️  Failed to fetch candle data from Meta api./nAttempting to exit all trades! ⚠️⚠️⚠️⚠️⚠️");
 			TelegramUtils.sendMessage(
-					"⚠️⚠️⚠️⚠️⚠️  Please check your trading account to ensure all trades have been closed! ⚠️⚠️⚠️⚠️⚠️");
+					"⚠️⚠️⚠️⚠️⚠️  Please check your trading account to ensure all trades have been closed!\nIf not closed, please close them immediately ⚠️⚠️⚠️⚠️⚠️");
 			TelegramUtils.sendMessage("⚠️⚠️⚠️⚠️⚠️  Please do not ignore this message! ⚠️⚠️⚠️⚠️⚠️");
 
 			return;
 		}
+		isServiceUnavailable = false;
+
 		if (candle.getZonedDate().isAfter(series.getLastBar().getEndTime())) {
-			series.addBar(candle.getZonedDate(), candle.getOpen(), candle.getHigh(), candle.getLow(), candle.getClose(),
-					candle.getTickVolume());
+			try {
+				series.addBar(candle.getZonedDate(), candle.getOpen(), candle.getHigh(), candle.getLow(),
+						candle.getClose(), candle.getTickVolume());
+			} catch (Exception e) {
+				log.error("Failed to add bar to series", e);
+				log.info("Will retry in next cycle");
+			}
+
 		}
 	}
 
@@ -85,7 +93,7 @@ public class App implements Runnable {
 			Num lastClosePrice = series.getLastBar().getClosePrice();
 			log.info("Bar added, close price = " + lastClosePrice);
 			int endIndex = series.getEndIndex();
-			if (strategy.shouldEnter(endIndex)) {
+			if (strategy.shouldEnter(endIndex) && !isServiceUnavailable) {
 				// Our strategy should enter
 				boolean entered = tradingRecord.enter(endIndex, lastClosePrice, volume);
 				if (entered) {
@@ -96,7 +104,7 @@ public class App implements Runnable {
 							+ "\nPosition type: " + tradingRecord.getStartingType() + "\nEntry price: "
 							+ entry.getNetPrice().doubleValue());
 				}
-			} else if (strategy.shouldExit(endIndex) || forcedExit) {
+			} else if (strategy.shouldExit(endIndex) || isServiceUnavailable) {
 				// Our strategy should exit
 				log.info("Strategy should EXIT on " + endIndex);
 				boolean exited = tradingRecord.exit(endIndex, lastClosePrice, volume);
@@ -107,7 +115,7 @@ public class App implements Runnable {
 							+ ", amount=" + exit.getAmount().doubleValue() + ")");
 					TelegramUtils.sendMessage("Position exited\nStrategy: " + Thread.currentThread().getName()
 							+ "\nPosition type: " + tradingRecord.getStartingType() + "\nExit price: "
-							+ exit.getNetPrice().doubleValue() + "\n Profit: "
+							+ exit.getNetPrice().doubleValue() + "\nProfit: $"
 							+ quoteListener.getProfit(tradingRecord.getLastEntry().getNetPrice().doubleValue(),
 									volume.doubleValue(), exit.getNetPrice().doubleValue(),
 									tradingRecord.getStartingType()));

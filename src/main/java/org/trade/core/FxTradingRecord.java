@@ -3,6 +3,7 @@ package org.trade.core;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jfree.util.Log;
 import org.ta4j.core.Position;
 import org.ta4j.core.Trade;
 import org.ta4j.core.Trade.TradeType;
@@ -10,6 +11,7 @@ import org.ta4j.core.TradingRecord;
 import org.ta4j.core.cost.CostModel;
 import org.ta4j.core.cost.ZeroCostModel;
 import org.ta4j.core.num.Num;
+import org.trade.utils.TelegramUtils;
 
 public class FxTradingRecord implements TradingRecord {
 
@@ -193,10 +195,16 @@ public class FxTradingRecord implements TradingRecord {
 
 	@Override
 	public boolean exit(int index, Num price, Num amount) {
-		if (currentPosition.isOpened() && !currentPosition.isPending()) {
-			operate(index, price, amount);
-			return true;
+		try {
+			if (currentPosition.isOpened() && !currentPosition.isPending()) {
+				operate(index, price, amount);
+				return true;
+			}
+		} catch (Exception e) {
+			Log.error("Failed to exit trade!", e);
+			TelegramUtils.sendMessage("Failed to exit trade\nStrategy: " + Thread.currentThread().getName());
 		}
+
 		return false;
 	}
 
