@@ -59,11 +59,12 @@ public class App implements Runnable {
 			return;
 		}
 		isServiceUnavailable = false;
-
 		if (candle.getZonedDate().isAfter(series.getLastBar().getEndTime())) {
 			try {
 				series.addBar(candle.getZonedDate(), candle.getOpen(), candle.getHigh(), candle.getLow(),
 						candle.getClose(), candle.getTickVolume());
+				log.info("series length " + series.getBarCount());
+
 			} catch (Exception e) {
 				log.error("Failed to add bar to series", e);
 				log.info("Will retry in next cycle");
@@ -110,7 +111,6 @@ public class App implements Runnable {
 				}
 			} else if (strategy.shouldExit(endIndex) || isServiceUnavailable) {
 				// Our strategy should exit
-				log.info("Strategy should EXIT on " + endIndex);
 				boolean exited = tradingRecord.exit(endIndex, lastClosePrice, volume);
 				if (exited) {
 					quoteListener.closeCounterTrade(); // redundancy check for closing counter trade

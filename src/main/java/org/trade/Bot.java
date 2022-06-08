@@ -15,6 +15,7 @@ import org.trade.core.beans.StrategyConfig;
 import org.trade.enums.Timeframe;
 import org.trade.loaders.DataLoader;
 import org.trade.loaders.MetaapiDataLoader;
+import org.trade.utils.JsonUtils;
 
 public class Bot {
 
@@ -26,24 +27,28 @@ public class Bot {
 
 		final Timeframe timeframe = Timeframe.fifteen_min;
 		final Num volume = DecimalNum.valueOf(0.2);
-		BarSeries eurusdSeries = initMovingBarSeries(SYMBOL_EURUSD, timeframe, 1000);
-		Strategy strategy1 = Strategies.getVwap9EmaBuyStrategy(eurusdSeries);
-		Strategy strategy2 = Strategies.getVwap9EmaSellStrategy(eurusdSeries);
+		BarSeries eurusdSeries1 = initMovingBarSeries(SYMBOL_EURUSD, timeframe, 500);
+		BarSeries eurusdSeries2 = initMovingBarSeries(SYMBOL_EURUSD, timeframe, 500);
 
-		BarSeries gbpusdSeries = initMovingBarSeries(SYMBOL_GBPUSD, timeframe, 1000);
-		Strategy strategy3 = Strategies.getVwap9EmaBuyStrategy(eurusdSeries);
-		Strategy strategy4 = Strategies.getVwap9EmaSellStrategy(eurusdSeries);
+		Strategy strategy1 = Strategies.getVwap9EmaBuyStrategy(eurusdSeries1);
+		Strategy strategy2 = Strategies.getVwap9EmaSellStrategy(eurusdSeries2);
+
+		BarSeries gbpusdSeries1 = initMovingBarSeries(SYMBOL_GBPUSD, timeframe, 500);
+		BarSeries gbpusdSeries2 = initMovingBarSeries(SYMBOL_GBPUSD, timeframe, 500);
+
+		Strategy strategy3 = Strategies.getVwap9EmaBuyStrategy(gbpusdSeries1);
+		Strategy strategy4 = Strategies.getVwap9EmaSellStrategy(gbpusdSeries2);
 
 		List<StrategyConfig> strategyConfigs = new LinkedList<>();
 
-		strategyConfigs.add(new StrategyConfig("EURUSD-Vwap9EmaBuy", SYMBOL_EURUSD, timeframe, volume, eurusdSeries,
+		strategyConfigs.add(new StrategyConfig("EURUSD-Vwap9EmaBuy", SYMBOL_EURUSD, timeframe, volume, eurusdSeries1,
 				strategy1, TradeType.BUY));
-		strategyConfigs.add(new StrategyConfig("EURUSD-Vwap9EmaSell", SYMBOL_EURUSD, timeframe, volume, eurusdSeries,
+		strategyConfigs.add(new StrategyConfig("EURUSD-Vwap9EmaSell", SYMBOL_EURUSD, timeframe, volume, eurusdSeries2,
 				strategy2, TradeType.SELL));
 
-		strategyConfigs.add(new StrategyConfig("GBPUSD-Vwap9EmaBuy", SYMBOL_GBPUSD, timeframe, volume, gbpusdSeries,
+		strategyConfigs.add(new StrategyConfig("GBPUSD-Vwap9EmaBuy", SYMBOL_GBPUSD, timeframe, volume, gbpusdSeries1,
 				strategy3, TradeType.BUY));
-		strategyConfigs.add(new StrategyConfig("GBPUSD-Vwap9EmaSell", SYMBOL_GBPUSD, timeframe, volume, gbpusdSeries,
+		strategyConfigs.add(new StrategyConfig("GBPUSD-Vwap9EmaSell", SYMBOL_GBPUSD, timeframe, volume, gbpusdSeries2,
 				strategy4, TradeType.SELL));
 
 		for (StrategyConfig strategyConfig : strategyConfigs) {
@@ -66,9 +71,13 @@ public class Bot {
 		BarSeries series = dataLoader.getSeries(symbol, maxBarCount, timeframe);
 		log.info("Initial bar count: " + series.getBarCount());
 		// Limiting the number of bars to maxBarCount
-		series.setMaximumBarCount(1500);
+		series.setMaximumBarCount(1000);
 		Num LAST_BAR_CLOSE_PRICE = series.getBar(series.getEndIndex()).getClosePrice();
 		log.info(" (limited to " + maxBarCount + "), close price = " + LAST_BAR_CLOSE_PRICE);
+		log.info("candle added to series");
+		log.info("series length " + series.getBarCount());
+		log.info("series last index " + series.getEndIndex());
+		log.info("series last bar " + JsonUtils.getString(series.getBar(series.getEndIndex())));
 		return series;
 	}
 

@@ -40,6 +40,7 @@ public class QuoteListener extends SynchronizationListener {
 		prices = new CircularFifoQueue<Double>(PRICES_COUNT);
 		LOT_SIZE = 100000; // TODO: get from meta api for other pairs
 		this.threadName = threadName;
+
 	}
 
 	private void initTriggerPoints() {
@@ -75,10 +76,10 @@ public class QuoteListener extends SynchronizationListener {
 		double currentProfit = getProfit(openPosition.openPrice, openPosition.volume, currentPrice, tradeType);
 		currentProfit = roundOff(currentProfit, 2);
 
-		log.debug("current profit = " + currentProfit);
+		log.info("current profit = " + currentProfit);
 		if (openPosition != null && counterPosition == null) {
 			double triggerLoss = getCounterTradeTriggerLoss(openPosition.volume);
-			log.debug("counter order trigger loss = " + triggerLoss);
+			log.info("counter order trigger loss = " + triggerLoss);
 			if (currentProfit <= triggerLoss) {
 				counterPosition = new MetatraderPosition();// blocking duplicate counter trade creation
 				log.info("placing counter trade");
