@@ -1,5 +1,9 @@
 package org.trade.core;
 
+import java.util.List;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.BaseStrategy;
 import org.ta4j.core.Indicator;
@@ -18,15 +22,27 @@ import org.ta4j.core.rules.CrossedUpIndicatorRule;
 import org.ta4j.core.rules.StopGainRule;
 
 public class Strategies {
+	private static final Logger log = LogManager.getLogger(Strategies.class);
 
-	public static Strategy getMacdRsiBuyStrategy(BarSeries series) {
+	// Created to simplify backtesting
+	public static Strategy getMacdRsiBuyStrategy(BarSeries series, List<Num> params) {
+		if (params.size() != 5) {
+			log.error("Invalid number of parameters!");
+			return null;
+		}
+		return getMacdRsiBuyStrategy(series, params.get(0), params.get(1), params.get(2), params.get(3), params.get(4));
+	}
+
+	public static Strategy getMacdRsiBuyStrategy(BarSeries series, Num macdIndicatorShortBarCount,
+			Num macdIndicatorLongBarCount, Num rsiIndicatorBarCount, Num rsiCrossedUpValue, Num stopGainPercentage) {
 		validate(series);
 		ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
-		MACDIndicator macdIndicator = new MACDIndicator(closePrice, 12, 26);
-		RSIIndicator rsiIndicator = new RSIIndicator(closePrice, 14);
+		MACDIndicator macdIndicator = new MACDIndicator(closePrice, macdIndicatorShortBarCount.intValue(),
+				macdIndicatorLongBarCount.intValue());
+		RSIIndicator rsiIndicator = new RSIIndicator(closePrice, rsiIndicatorBarCount.intValue());
 		Rule entry = new CrossedUpIndicatorRule(macdIndicator.getShortTermEma(), macdIndicator.getLongTermEma())
-				.and(new CrossedUpIndicatorRule(rsiIndicator, 30));
-		Rule exit = new StopGainRule(closePrice, .1);
+				.and(new CrossedUpIndicatorRule(rsiIndicator, macdIndicatorLongBarCount.intValue()));
+		Rule exit = new StopGainRule(closePrice, stopGainPercentage);
 		Strategy strategy = new BaseStrategy(entry, exit);
 		return strategy;
 	}
