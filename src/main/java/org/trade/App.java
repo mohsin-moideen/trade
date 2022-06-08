@@ -75,10 +75,6 @@ public class App implements Runnable {
 
 	@Override
 	public void run() {
-		// initLogger();
-		log.info("********************** Initialization **********************");
-
-		// Init meta api and get connection
 		MetaApiUtil.initMetaApi();
 
 		// default starting type is buy
@@ -91,7 +87,7 @@ public class App implements Runnable {
 //		MetaApiUtil.getMetaApiConnection()
 //				.addSynchronizationListener(new PriceListener(series, SYMBOL, tradingRecord.getStartingType()));
 
-		log.info("******************** Initialization complete **********************");
+		log.info("Initialization complete");
 
 		while (true) {
 			updateSeries();
@@ -126,6 +122,7 @@ public class App implements Runnable {
 				}
 			}
 			try {
+				log.info("Thread paused for %s minutes", Timeframe.getMintues(timeframe));
 				Thread.sleep(Timeframe.getMintues(timeframe) * 60000);
 			} catch (InterruptedException e) {
 				log.error(e.getMessage(), e);

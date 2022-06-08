@@ -13,9 +13,7 @@ import org.ta4j.core.num.Num;
 import org.trade.core.Strategies;
 import org.trade.core.beans.StrategyConfig;
 import org.trade.enums.Timeframe;
-import org.trade.loaders.DataLoader;
-import org.trade.loaders.MetaapiDataLoader;
-import org.trade.utils.JsonUtils;
+import org.trade.loaders.SeriesUtil;
 
 public class Bot {
 
@@ -27,14 +25,14 @@ public class Bot {
 
 		final Timeframe timeframe = Timeframe.fifteen_min;
 		final Num volume = DecimalNum.valueOf(0.2);
-		BarSeries eurusdSeries1 = initMovingBarSeries(SYMBOL_EURUSD, timeframe, 500);
-		BarSeries eurusdSeries2 = initMovingBarSeries(SYMBOL_EURUSD, timeframe, 500);
+		BarSeries eurusdSeries1 = SeriesUtil.initMovingBarSeries(SYMBOL_EURUSD, timeframe, 500);
+		BarSeries eurusdSeries2 = SeriesUtil.initMovingBarSeries(SYMBOL_EURUSD, timeframe, 500);
 
 		Strategy strategy1 = Strategies.getVwap9EmaBuyStrategy(eurusdSeries1);
 		Strategy strategy2 = Strategies.getVwap9EmaSellStrategy(eurusdSeries2);
 
-		BarSeries gbpusdSeries1 = initMovingBarSeries(SYMBOL_GBPUSD, timeframe, 500);
-		BarSeries gbpusdSeries2 = initMovingBarSeries(SYMBOL_GBPUSD, timeframe, 500);
+		BarSeries gbpusdSeries1 = SeriesUtil.initMovingBarSeries(SYMBOL_GBPUSD, timeframe, 500);
+		BarSeries gbpusdSeries2 = SeriesUtil.initMovingBarSeries(SYMBOL_GBPUSD, timeframe, 500);
 
 		Strategy strategy3 = Strategies.getVwap9EmaBuyStrategy(gbpusdSeries1);
 		Strategy strategy4 = Strategies.getVwap9EmaSellStrategy(gbpusdSeries2);
@@ -56,29 +54,9 @@ public class Bot {
 					new App(strategyConfig.getSymbol(), strategyConfig.getTimeframe(), strategyConfig.getVolume(),
 							strategyConfig.getSeries(), strategyConfig.getStrategy(), strategyConfig.getTradeType()));
 			app.setName(strategyConfig.getName());
+			log.info("Starting %s strategy", strategyConfig.getName());
 			app.start();
 		}
-	}
-
-	/**
-	 * Builds a moving bar series (i.e. keeping only the maxBarCount last bars)
-	 *
-	 * @param maxBarCount the number of bars to keep in the bar series (at maximum)
-	 * @return a moving bar series
-	 */
-	private static BarSeries initMovingBarSeries(String symbol, Timeframe timeframe, int maxBarCount) {
-		DataLoader dataLoader = new MetaapiDataLoader();
-		BarSeries series = dataLoader.getSeries(symbol, maxBarCount, timeframe);
-		log.info("Initial bar count: " + series.getBarCount());
-		// Limiting the number of bars to maxBarCount
-		series.setMaximumBarCount(1000);
-		Num LAST_BAR_CLOSE_PRICE = series.getBar(series.getEndIndex()).getClosePrice();
-		log.info(" (limited to " + maxBarCount + "), close price = " + LAST_BAR_CLOSE_PRICE);
-		log.info("candle added to series");
-		log.info("series length " + series.getBarCount());
-		log.info("series last index " + series.getEndIndex());
-		log.info("series last bar " + JsonUtils.getString(series.getBar(series.getEndIndex())));
-		return series;
 	}
 
 }
