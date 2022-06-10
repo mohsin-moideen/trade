@@ -68,7 +68,6 @@ public class QuoteListener extends SynchronizationListener {
 			counterOrderPrice = price.bid;
 			actionType = TradeType.BUY;
 		}
-		counterPosition.currentPrice = counterOrderPrice;
 		prices.add(currentPrice);
 		log.debug("currentPrice = " + currentPrice);
 		log.debug("openPosition.openPrice = " + openPosition.openPrice);
@@ -106,7 +105,7 @@ public class QuoteListener extends SynchronizationListener {
 				}
 			}
 		} else if (openPosition != null && counterPosition != null) {
-
+			counterPosition.currentPrice = counterOrderPrice;
 			if (shouldCloseCounterTrade(counterPosition, actionType, counterOrderPrice)) {
 				closeCounterTrade();
 			}

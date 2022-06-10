@@ -13,7 +13,6 @@ import org.trade.enums.Timeframe;
 import org.trade.utils.TelegramUtils;
 import org.trade.utils.meta_api.MarketDataUtil;
 import org.trade.utils.meta_api.MetaApiUtil;
-import org.trade.utils.meta_api.listeners.OrderSynchronizationListener;
 import org.trade.utils.meta_api.listeners.QuoteListener;
 
 /**
@@ -77,11 +76,10 @@ public class App implements Runnable {
 	public void run() {
 		MetaApiUtil.initMetaApi();
 
-		// default starting type is buy
 		FxTradingRecord tradingRecord = new FxTradingRecord(symbol, tradeType);
 
-		MetaApiUtil.getMetaApiConnection().addSynchronizationListener(
-				new OrderSynchronizationListener(tradingRecord, Thread.currentThread().getName()));
+//		MetaApiUtil.getMetaApiConnection().addSynchronizationListener(
+//				new OrderSynchronizationListener(tradingRecord, Thread.currentThread().getName()));
 		QuoteListener quoteListener = new QuoteListener(tradingRecord, Thread.currentThread().getName());
 		MetaApiUtil.getMetaApiConnection().addSynchronizationListener(quoteListener);
 //		MetaApiUtil.getMetaApiConnection()
@@ -122,7 +120,7 @@ public class App implements Runnable {
 				}
 			}
 			try {
-				log.info("Thread paused for %s minutes", Timeframe.getMintues(timeframe));
+				log.info("Thread paused for " + Timeframe.getMintues(timeframe) + " minutes");
 				Thread.sleep(Timeframe.getMintues(timeframe) * 60000);
 			} catch (InterruptedException e) {
 				log.error(e.getMessage(), e);
