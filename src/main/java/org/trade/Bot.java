@@ -28,14 +28,16 @@ public class Bot {
 		BarSeries eurusdSeries1 = SeriesUtil.initMovingBarSeries(SYMBOL_EURUSD, timeframe, 500);
 		BarSeries eurusdSeries2 = SeriesUtil.initMovingBarSeries(SYMBOL_EURUSD, timeframe, 500);
 
-		Strategy strategy1 = Strategies.getVwap9EmaBuyStrategy(eurusdSeries1);
-		Strategy strategy2 = Strategies.getVwap9EmaSellStrategy(eurusdSeries2);
+		Strategy strategy1 = Strategies.getVwap9EmaSellStrategy(eurusdSeries1, DecimalNum.valueOf(0.05),
+				DecimalNum.valueOf(0.02));
+		Strategy strategy2 = Strategies.getVwap9EmaBuyStrategy(eurusdSeries2);
 
 		BarSeries gbpusdSeries1 = SeriesUtil.initMovingBarSeries(SYMBOL_GBPUSD, timeframe, 500);
 		BarSeries gbpusdSeries2 = SeriesUtil.initMovingBarSeries(SYMBOL_GBPUSD, timeframe, 500);
 
-		Strategy strategy3 = Strategies.getVwap9EmaBuyStrategy(gbpusdSeries1);
-		Strategy strategy4 = Strategies.getVwap9EmaSellStrategy(gbpusdSeries2);
+		Strategy strategy3 = Strategies.getVwap9EmaSellStrategy(gbpusdSeries1, DecimalNum.valueOf(0.05),
+				DecimalNum.valueOf(0.02));
+		Strategy strategy4 = Strategies.getVwap9EmaBuyStrategy(gbpusdSeries2);
 
 		List<StrategyConfig> strategyConfigs = new LinkedList<>();
 

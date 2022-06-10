@@ -20,28 +20,27 @@ import org.ta4j.core.num.Num;
 import org.ta4j.core.rules.CrossedDownIndicatorRule;
 import org.ta4j.core.rules.CrossedUpIndicatorRule;
 import org.ta4j.core.rules.StopGainRule;
+import org.ta4j.core.rules.StopLossRule;
 
 public class Strategies {
 	private static final Logger log = LogManager.getLogger(Strategies.class);
 
 	// Created to simplify backtesting
 	public static Strategy getMacdRsiBuyStrategy(BarSeries series, List<Num> params) {
-		if (params.size() != 5) {
+		if (params.size() != 2) {
 			log.error("Invalid number of parameters!");
 			return null;
 		}
-		return getMacdRsiBuyStrategy(series, params.get(0), params.get(1), params.get(2), params.get(3), params.get(4));
+		return getMacdRsiBuyStrategy(series, params.get(0), params.get(1));
 	}
 
-	public static Strategy getMacdRsiBuyStrategy(BarSeries series, Num macdIndicatorShortBarCount,
-			Num macdIndicatorLongBarCount, Num rsiIndicatorBarCount, Num rsiCrossedUpValue, Num stopGainPercentage) {
+	public static Strategy getMacdRsiBuyStrategy(BarSeries series, Num rsiIndicatorBarCount, Num stopGainPercentage) {
 		validate(series);
 		ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
-		MACDIndicator macdIndicator = new MACDIndicator(closePrice, macdIndicatorShortBarCount.intValue(),
-				macdIndicatorLongBarCount.intValue());
+		MACDIndicator macdIndicator = new MACDIndicator(closePrice, 12, 26);
 		RSIIndicator rsiIndicator = new RSIIndicator(closePrice, rsiIndicatorBarCount.intValue());
 		Rule entry = new CrossedUpIndicatorRule(macdIndicator.getShortTermEma(), macdIndicator.getLongTermEma())
-				.and(new CrossedUpIndicatorRule(rsiIndicator, macdIndicatorLongBarCount.intValue()));
+				.and(new CrossedUpIndicatorRule(rsiIndicator, 30));
 		Rule exit = new StopGainRule(closePrice, stopGainPercentage);
 		Strategy strategy = new BaseStrategy(entry, exit);
 		return strategy;
@@ -59,18 +58,28 @@ public class Strategies {
 		return strategy;
 	}
 
-	public static Strategy getVwap9EmaBuyStrategy(BarSeries series) {
+	// Created to simplify backtesting
+	public static Strategy getVwap9EmaSellStrategy(BarSeries series, List<Num> params) {
+		if (params.size() != 2) {
+			log.error("Invalid number of parameters!" + " Expected 2, found " + params.size());
+			return null;
+		}
+		return getVwap9EmaSellStrategy(series, params.get(0), params.get(1));
+	}
+
+	public static Strategy getVwap9EmaSellStrategy(BarSeries series, Num stopGainPercentage, Num stopLossPercentage) {
 		validate(series);
 		ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
 		VWAPIndicator vwapIndicator = new VWAPIndicator(series, 14);
 		EMAIndicator emaIndicator = new EMAIndicator(closePrice, 9);
 		Rule entryRule = new CrossedUpIndicatorRule(emaIndicator, vwapIndicator);
-		Rule exitRule = new StopGainRule(closePrice, .15);
+		Rule exitRule = new StopGainRule(closePrice, stopGainPercentage)
+				.or(new StopLossRule(closePrice, stopLossPercentage));
 		BaseStrategy strategy = new BaseStrategy(entryRule, exitRule);
 		return strategy;
 	}
 
-	public static Strategy getVwap9EmaSellStrategy(BarSeries series) {
+	public static Strategy getVwap9EmaBuyStrategy(BarSeries series) {
 		validate(series);
 		ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
 		VWAPIndicator vwapIndicator = new VWAPIndicator(series, 50);

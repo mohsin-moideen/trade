@@ -29,7 +29,7 @@ public class App implements Runnable {
 	private Num volume;
 	private BarSeries series;
 	private Strategy strategy;
-	private boolean isServiceUnavailable;
+	private boolean forcedExit;
 	private TradeType tradeType;
 
 	public App(String symbol, Timeframe timeframe, Num volume, BarSeries series, Strategy strategy,
@@ -41,14 +41,14 @@ public class App implements Runnable {
 		this.series = series;
 		this.strategy = strategy;
 		this.tradeType = tradeType;
-		isServiceUnavailable = false;
+		forcedExit = false;
 	}
 
 	private void updateSeries() {
 		Candle candle = MarketDataUtil.getCurrentCandle(symbol, timeframe);
 		// null check for candle - happens when meta api is down!!
 		if (candle == null) {
-			isServiceUnavailable = true;
+			forcedExit = true;
 			log.error("Failed to fetch candle data from Meta api./n Exiting all trades!");
 			TelegramUtils.sendMessage(
 					"⚠️⚠️⚠️⚠️⚠️  Failed to fetch candle data from Meta api./nAttempting to exit all trades! ⚠️⚠️⚠️⚠️⚠️");
@@ -58,7 +58,7 @@ public class App implements Runnable {
 
 			return;
 		}
-		isServiceUnavailable = false;
+		forcedExit = false;
 		if (candle.getZonedDate().isAfter(series.getLastBar().getEndTime())) {
 			try {
 				series.addBar(candle.getZonedDate(), candle.getOpen(), candle.getHigh(), candle.getLow(),
@@ -94,7 +94,7 @@ public class App implements Runnable {
 			Num lastClosePrice = series.getLastBar().getClosePrice();
 			log.info("Bar added, close price = " + lastClosePrice);
 			int endIndex = series.getEndIndex();
-			if (strategy.shouldEnter(endIndex) && !isServiceUnavailable) {
+			if (strategy.shouldEnter(endIndex)) {
 				// Our strategy should enter
 				boolean entered = tradingRecord.enter(endIndex, lastClosePrice, volume);
 				if (entered) {
@@ -105,7 +105,7 @@ public class App implements Runnable {
 							+ "\nPosition type: " + tradingRecord.getStartingType() + "\nEntry price: "
 							+ entry.getNetPrice().doubleValue());
 				}
-			} else if (strategy.shouldExit(endIndex) || isServiceUnavailable) {
+			} else if (strategy.shouldExit(endIndex)) {
 				// Our strategy should exit
 				boolean exited = tradingRecord.exit(endIndex, lastClosePrice, volume);
 				if (exited) {
