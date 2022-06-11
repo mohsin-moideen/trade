@@ -36,6 +36,15 @@ import org.trade.loaders.SeriesUtil;
 
 import com.opencsv.CSVWriter;
 
+/**
+ * Follow these step to configure backtesting
+ * Step 1: Change strategy name
+ * Step 2: Set currency pairs
+ * Step 3: Set time frames
+ * Step 4: Create parameters required
+ * Step 5:Add created parameters to list. Please ensure the order matches the parameters accepted by the get strategy method
+ * Step 6: Change function call. You're set!
+ */
 public class Backtest {
 
 	private static final String SERIES_JOINER = "_";
@@ -51,7 +60,7 @@ public class Backtest {
 	private static final AnalysisCriterion winningPositionsRatioCriterion = new WinningPositionsRatioCriterion();
 
 	private static final Logger log = LogManager.getLogger(Backtest.class);
-
+ 
 	public static void main(String[] args) throws IOException {
 		// Step 1: Change strategy name
 		final String strategyName = "Vwap9EmaSellStrategy";
@@ -63,7 +72,7 @@ public class Backtest {
 		List<String> currencyPairs = new LinkedList<>(Arrays.asList(new String[] { "EURUSD" }));
 		// Step 3: Set time frames
 		List<Timeframe> timeFrames = new LinkedList<>(
-				Arrays.asList(new Timeframe[] { Timeframe.five_min, Timeframe.fifteen_min, Timeframe.one_hour }));
+				Arrays.asList(new Timeframe[] { Timeframe.fifteen_min, Timeframe.one_hour }));
 		Map<String, BarSeries> series = initSeries(currencyPairs, timeFrames);
 		List<StrategyParamsConfig> paramConfigs = new LinkedList<>();
 		// Step 4: Create parameters required
@@ -71,21 +80,34 @@ public class Backtest {
 				DecimalNum.valueOf(.01), DecimalNum.valueOf(.2), DecimalNum.valueOf(.01));
 		StrategyParamsConfig stopLossPercentage = new StrategyParamsConfig("stopLossPercentage",
 				DecimalNum.valueOf(.01), DecimalNum.valueOf(.2), DecimalNum.valueOf(.01));
-		// Step 5: Add created parameters to list
+		StrategyParamsConfig vwapIndicatorLength = new StrategyParamsConfig("vwapIndicatorLength",
+				DecimalNum.valueOf(1), DecimalNum.valueOf(50), DecimalNum.valueOf(1));
+		// Step 5: Add created parameters to list. Please ensure the order matches the
+		// parameters accepted by the get strategy method
+		paramConfigs.add(vwapIndicatorLength);
 		paramConfigs.add(stopGainPercentage);
 		paramConfigs.add(stopLossPercentage);
 		writeCsvHeaders(paramConfigs);
 		List<Num> params = new LinkedList<>();
-		for (String currencyPair : currencyPairs) {
-			for (Timeframe timeFrame : timeFrames) {
-				backtest(currencyPair, timeFrame, series, params, paramConfigs, paramConfigs.size() - 1);
+		log.info("Running backtests...");
+		log.info("This may take a few minutes depending on the number and range of parameters set");
+
+		try {
+			for (String currencyPair : currencyPairs) {
+				for (Timeframe timeFrame : timeFrames) {
+					backtest(currencyPair, timeFrame, series, params, paramConfigs, paramConfigs.size() - 1);
+				}
 			}
+		} catch (Exception e) {
+			log.error("Failed to run backtests", e);
 		}
+
 		log.info("Backtesting complete!");
+		csvWriter.close();
 	}
 
 	private static void backtest(String currencyPair, Timeframe timeFrame, Map<String, BarSeries> series,
-			List<Num> params, List<StrategyParamsConfig> paramConfigs, int paramIndex) {
+			List<Num> params, List<StrategyParamsConfig> paramConfigs, int paramIndex) throws Exception {
 		StrategyParamsConfig strategyParamsConfig = paramConfigs.get(paramIndex);
 		if (paramIndex == 0) {
 			for (Num value = strategyParamsConfig.getStartValue(); value.isLessThanOrEqual(

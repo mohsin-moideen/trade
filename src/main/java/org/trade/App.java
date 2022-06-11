@@ -28,7 +28,7 @@ public class App implements Runnable {
 	private Num volume;
 	private BarSeries series;
 	private Strategy strategy;
-	private boolean forcedExit;
+	// private boolean forcedExit;
 	private TradeType tradeType;
 
 	public App(String symbol, Timeframe timeframe, Num volume, BarSeries series, Strategy strategy,
@@ -40,14 +40,13 @@ public class App implements Runnable {
 		this.series = series;
 		this.strategy = strategy;
 		this.tradeType = tradeType;
-		forcedExit = false;
+		// forcedExit = false;
 	}
 
 	private void updateSeries() {
 		Candle candle = MarketDataUtil.getCurrentCandle(symbol, timeframe);
 		// null check for candle - happens when meta api is down!!
 		if (candle == null) {
-			forcedExit = true;
 			log.error("Failed to fetch candle data from Meta api./n Exiting all trades!");
 			TelegramUtils.sendMessage(
 					"⚠️⚠️⚠️⚠️⚠️  Failed to fetch candle data from Meta api./nAttempting to exit all trades! ⚠️⚠️⚠️⚠️⚠️");
@@ -57,7 +56,6 @@ public class App implements Runnable {
 
 			return;
 		}
-		forcedExit = false;
 		if (candle.getZonedDate().isAfter(series.getLastBar().getEndTime())) {
 			try {
 				series.addBar(candle.getZonedDate(), candle.getOpen(), candle.getHigh(), candle.getLow(),

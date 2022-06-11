@@ -60,17 +60,15 @@ public class Strategies {
 
 	// Created to simplify backtesting
 	public static Strategy getVwap9EmaSellStrategy(BarSeries series, List<Num> params) {
-		if (params.size() != 2) {
-			log.error("Invalid number of parameters!" + " Expected 2, found " + params.size());
-			return null;
-		}
-		return getVwap9EmaSellStrategy(series, params.get(0), params.get(1));
+		validateParamCount(params, 3);
+		return getVwap9EmaSellStrategy(series, params.get(0), params.get(1), params.get(2));
 	}
 
-	public static Strategy getVwap9EmaSellStrategy(BarSeries series, Num stopGainPercentage, Num stopLossPercentage) {
+	public static Strategy getVwap9EmaSellStrategy(BarSeries series, Num vwapIndicatorLength, Num stopGainPercentage,
+			Num stopLossPercentage) {
 		validate(series);
 		ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
-		VWAPIndicator vwapIndicator = new VWAPIndicator(series, 14);
+		VWAPIndicator vwapIndicator = new VWAPIndicator(series, vwapIndicatorLength.intValue());
 		EMAIndicator emaIndicator = new EMAIndicator(closePrice, 9);
 		Rule entryRule = new CrossedUpIndicatorRule(emaIndicator, vwapIndicator);
 		Rule exitRule = new StopGainRule(closePrice, stopGainPercentage)
@@ -79,13 +77,20 @@ public class Strategies {
 		return strategy;
 	}
 
-	public static Strategy getVwap9EmaBuyStrategy(BarSeries series) {
+	// Created to simplify backtesting
+	public static Strategy getVwap9EmaBuyStrategy(BarSeries series, List<Num> params) {
+		validateParamCount(params, 3);
+		return getVwap9EmaBuyStrategy(series, params.get(0), params.get(1));
+	}
+
+	public static Strategy getVwap9EmaBuyStrategy(BarSeries series, Num stopGainPercentage, Num stopLossPercentage) {
 		validate(series);
 		ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
 		VWAPIndicator vwapIndicator = new VWAPIndicator(series, 50);
 		EMAIndicator emaIndicator = new EMAIndicator(closePrice, 9);
 		Rule entryRule = new CrossedDownIndicatorRule(emaIndicator, vwapIndicator);
-		Rule exitRule = new StopGainRule(closePrice, .1);
+		Rule exitRule = new StopGainRule(closePrice, stopGainPercentage)
+				.or(new StopLossRule(closePrice, stopLossPercentage));
 		BaseStrategy strategy = new BaseStrategy(entryRule, exitRule);
 		return strategy;
 	}
@@ -106,6 +111,14 @@ public class Strategies {
 	private static void validate(BarSeries series) {
 		if (series == null) {
 			throw new IllegalArgumentException("Series cannot be null");
+		}
+	}
+
+	private static void validateParamCount(List<Num> params, int expectedCount) {
+		if (params.size() != expectedCount) {
+			String message = "Invalid number of parameters!" + " Expected" + expectedCount + ", found " + params.size();
+			log.error(message);
+			throw new IllegalArgumentException(message);
 		}
 	}
 }

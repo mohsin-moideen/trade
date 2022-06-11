@@ -29,8 +29,8 @@ public class Bot {
 		// BarSeries eurusdSeries2 = SeriesUtil.initMovingBarSeries(SYMBOL_EURUSD,
 		// timeframe, 500);
 
-		Strategy strategy1 = Strategies.getVwap9EmaSellStrategy(eurusdSeries1, DecimalNum.valueOf(0.2),
-				DecimalNum.valueOf(0.09));
+		Strategy strategy1 = Strategies.getVwap9EmaSellStrategy(eurusdSeries1, DecimalNum.valueOf(14),
+				DecimalNum.valueOf(0.2), DecimalNum.valueOf(0.09));
 //		Strategy strategy2 = Strategies.getVwap9EmaBuyStrategy(eurusdSeries2);
 //
 //		BarSeries gbpusdSeries1 = SeriesUtil.initMovingBarSeries(SYMBOL_GBPUSD, timeframe, 500);
