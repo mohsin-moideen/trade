@@ -33,17 +33,16 @@ import org.trade.core.Strategies;
 import org.trade.core.beans.StrategyParamsConfig;
 import org.trade.enums.Timeframe;
 import org.trade.loaders.SeriesUtil;
+import org.trade.utils.meta_api.listeners.QuoteListener;
 
 import com.opencsv.CSVWriter;
 
 /**
- * Follow these step to configure backtesting
- * Step 1: Change strategy name
- * Step 2: Set currency pairs
- * Step 3: Set time frames
- * Step 4: Create parameters required
- * Step 5:Add created parameters to list. Please ensure the order matches the parameters accepted by the get strategy method
- * Step 6: Change function call. You're set!
+ * Follow these step to configure backtesting Step 1: Change strategy name Step
+ * 2: Set currency pairs Step 3: Set time frames Step 4: Create parameters
+ * required Step 5:Add created parameters to list. Please ensure the order
+ * matches the parameters accepted by the get strategy method Step 6: Change
+ * function call. You're set!
  */
 public class Backtest {
 
@@ -58,12 +57,12 @@ public class Backtest {
 	private static final AnalysisCriterion profitLossRatioCriterion = new ProfitLossRatioCriterion();
 	private static final AnalysisCriterion maximumDrawdownCriterion = new MaximumDrawdownCriterion();
 	private static final AnalysisCriterion winningPositionsRatioCriterion = new WinningPositionsRatioCriterion();
-
+	private static double totalPieces, completedPieces;
 	private static final Logger log = LogManager.getLogger(Backtest.class);
- 
+
 	public static void main(String[] args) throws IOException {
 		// Step 1: Change strategy name
-		final String strategyName = "Vwap9EmaSellStrategy";
+		final String strategyName = "EmaRsiAdxBuyStrategy";
 		final String fileName = REPORT_BASE_PATH + strategyName + "-"
 				+ new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date()) + ".csv";
 		log.info("Results will be saved to " + fileName);
@@ -71,23 +70,34 @@ public class Backtest {
 		// Step 2: Set currency pairs
 		List<String> currencyPairs = new LinkedList<>(Arrays.asList(new String[] { "EURUSD" }));
 		// Step 3: Set time frames
-		List<Timeframe> timeFrames = new LinkedList<>(
-				Arrays.asList(new Timeframe[] { Timeframe.fifteen_min, Timeframe.one_hour }));
+		List<Timeframe> timeFrames = new LinkedList<>(Arrays.asList(new Timeframe[] { Timeframe.fifteen_min }));
 		Map<String, BarSeries> series = initSeries(currencyPairs, timeFrames);
 		List<StrategyParamsConfig> paramConfigs = new LinkedList<>();
 		// Step 4: Create parameters required
 		StrategyParamsConfig stopGainPercentage = new StrategyParamsConfig("stopGainPercentage",
-				DecimalNum.valueOf(.01), DecimalNum.valueOf(.2), DecimalNum.valueOf(.01));
+				DecimalNum.valueOf(.01), DecimalNum.valueOf(.05), DecimalNum.valueOf(.01));
 		StrategyParamsConfig stopLossPercentage = new StrategyParamsConfig("stopLossPercentage",
-				DecimalNum.valueOf(.01), DecimalNum.valueOf(.2), DecimalNum.valueOf(.01));
-		StrategyParamsConfig vwapIndicatorLength = new StrategyParamsConfig("vwapIndicatorLength",
-				DecimalNum.valueOf(1), DecimalNum.valueOf(50), DecimalNum.valueOf(1));
+				DecimalNum.valueOf(.01), DecimalNum.valueOf(.06), DecimalNum.valueOf(.01));
+		StrategyParamsConfig rsiIndicatorLength = new StrategyParamsConfig("rsiIndicatorLength", DecimalNum.valueOf(2),
+				DecimalNum.valueOf(3), DecimalNum.valueOf(1));
+		StrategyParamsConfig adxIndicatorLength = new StrategyParamsConfig("adxIndicatorLength", DecimalNum.valueOf(3),
+				DecimalNum.valueOf(6), DecimalNum.valueOf(1));
+		StrategyParamsConfig emaIndicatorLength = new StrategyParamsConfig("emaIndicatorLength", DecimalNum.valueOf(45),
+				DecimalNum.valueOf(55), DecimalNum.valueOf(1));
+
 		// Step 5: Add created parameters to list. Please ensure the order matches the
 		// parameters accepted by the get strategy method
-		paramConfigs.add(vwapIndicatorLength);
+		paramConfigs.add(rsiIndicatorLength);
+		paramConfigs.add(adxIndicatorLength);
+		paramConfigs.add(emaIndicatorLength);
 		paramConfigs.add(stopGainPercentage);
 		paramConfigs.add(stopLossPercentage);
 		writeCsvHeaders(paramConfigs);
+		StrategyParamsConfig lastParam = paramConfigs.get(paramConfigs.size() - 1);
+		totalPieces = currencyPairs.size() * timeFrames.size()
+				* (lastParam.getEndValue().minus(lastParam.getStartValue()).doubleValue())
+				/ lastParam.getIncrement().doubleValue() + 1;
+		completedPieces = 0;
 		List<Num> params = new LinkedList<>();
 		log.info("Running backtests...");
 		log.info("This may take a few minutes depending on the number and range of parameters set");
@@ -117,7 +127,7 @@ public class Backtest {
 				BarSeriesManager seriesManager = new BarSeriesManager(barSeries);
 				Collections.reverse(params);
 				// Step 6: Change function call. You're set!
-				Strategy strategy = Strategies.getVwap9EmaSellStrategy(barSeries, params);
+				Strategy strategy = Strategies.getEmaRsiAdxBuyStrategy(barSeries, params);
 				TradingRecord tradingRecordBuy = seriesManager.run(strategy, TradeType.BUY,
 						DecimalNum.valueOf(volume * lotSize));
 				TradingRecord tradingRecordSell = seriesManager.run(strategy, TradeType.SELL,
@@ -138,6 +148,9 @@ public class Backtest {
 					strategyParamsConfig.getEndValue()); value = value.plus(strategyParamsConfig.getIncrement())) {
 				params.add(value);
 				backtest(currencyPair, timeFrame, series, params, paramConfigs, paramIndex - 1);
+				if (paramIndex == paramConfigs.size() - 1) {
+					log.info("Completed " + QuoteListener.roundOff((++completedPieces / totalPieces * 100), 2) + "%");
+				}
 				params.remove(params.size() - 1);
 			}
 		}

@@ -113,7 +113,7 @@ public class QuoteListener extends SynchronizationListener {
 		return CompletableFuture.completedFuture(null);
 	}
 
-	private static double roundOff(double number, int points) {
+	public static double roundOff(double number, int points) {
 		double equilizer = Math.pow(10, points);
 		return Math.round(number * equilizer) / equilizer;
 	}
