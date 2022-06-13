@@ -149,7 +149,7 @@ public class Backtest {
 				params.add(value);
 				backtest(currencyPair, timeFrame, series, params, paramConfigs, paramIndex - 1);
 				if (paramIndex == paramConfigs.size() - 1) {
-					log.info("Completed " + QuoteListener.roundOff((++completedPieces / totalPieces * 100), 2) + "%");
+					log.info("Completed " + QuoteListener.roundOff((completedPieces++ / totalPieces * 100), 2) + "%");
 				}
 				params.remove(params.size() - 1);
 			}
