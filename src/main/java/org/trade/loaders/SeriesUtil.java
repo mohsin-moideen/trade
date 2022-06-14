@@ -2,6 +2,7 @@ package org.trade.loaders;
 
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.num.Num;
+import org.trade.enums.TimePeriod;
 import org.trade.enums.Timeframe;
 
 public class SeriesUtil {
@@ -20,5 +21,10 @@ public class SeriesUtil {
 		Num LAST_BAR_CLOSE_PRICE = series.getBar(series.getEndIndex()).getClosePrice();
 		System.out.println(" (limited to " + maxBarCount + "), close price = " + LAST_BAR_CLOSE_PRICE);
 		return series;
+	}
+
+	public static BarSeries initMovingBarSeries(String symbol, Timeframe timeframe, TimePeriod timePeriod) {
+		int numberOfBars = TimePeriod.getMintues(timePeriod) / Timeframe.getMintues(timeframe);
+		return initMovingBarSeries(symbol, timeframe, numberOfBars);
 	}
 }

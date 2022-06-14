@@ -31,6 +31,7 @@ import org.ta4j.core.reports.TradingStatement;
 import org.ta4j.core.reports.TradingStatementGenerator;
 import org.trade.core.Strategies;
 import org.trade.core.beans.StrategyParamsConfig;
+import org.trade.enums.TimePeriod;
 import org.trade.enums.Timeframe;
 import org.trade.loaders.SeriesUtil;
 import org.trade.utils.meta_api.listeners.QuoteListener;
@@ -71,11 +72,11 @@ public class Backtest {
 		List<String> currencyPairs = new LinkedList<>(Arrays.asList(new String[] { "EURUSD" }));
 		// Step 3: Set time frames
 		List<Timeframe> timeFrames = new LinkedList<>(Arrays.asList(new Timeframe[] { Timeframe.fifteen_min }));
-		Map<String, BarSeries> series = initSeries(currencyPairs, timeFrames);
+		Map<String, BarSeries> series = initSeries(currencyPairs, timeFrames, TimePeriod.one_month);
 		List<StrategyParamsConfig> paramConfigs = new LinkedList<>();
 		// Step 4: Create parameters required
 		StrategyParamsConfig stopGainPercentage = new StrategyParamsConfig("stopGainPercentage",
-				DecimalNum.valueOf(.01), DecimalNum.valueOf(.05), DecimalNum.valueOf(.01));
+				DecimalNum.valueOf(.01), DecimalNum.valueOf(.1), DecimalNum.valueOf(.01));
 		StrategyParamsConfig stopLossPercentage = new StrategyParamsConfig("stopLossPercentage",
 				DecimalNum.valueOf(.01), DecimalNum.valueOf(.06), DecimalNum.valueOf(.01));
 		StrategyParamsConfig rsiIndicatorLength = new StrategyParamsConfig("rsiIndicatorLength", DecimalNum.valueOf(2),
@@ -95,8 +96,8 @@ public class Backtest {
 		writeCsvHeaders(paramConfigs);
 		StrategyParamsConfig lastParam = paramConfigs.get(paramConfigs.size() - 1);
 		totalPieces = currencyPairs.size() * timeFrames.size()
-				* (lastParam.getEndValue().minus(lastParam.getStartValue()).doubleValue())
-				/ lastParam.getIncrement().doubleValue() + 1;
+				* (lastParam.getEndValue().minus(lastParam.getStartValue()).doubleValue()
+						/ lastParam.getIncrement().doubleValue() + 1);
 		completedPieces = 0;
 		List<Num> params = new LinkedList<>();
 		log.info("Running backtests...");
@@ -128,16 +129,16 @@ public class Backtest {
 				Collections.reverse(params);
 				// Step 6: Change function call. You're set!
 				Strategy strategy = Strategies.getEmaRsiAdxBuyStrategy(barSeries, params);
-				TradingRecord tradingRecordBuy = seriesManager.run(strategy, TradeType.BUY,
-						DecimalNum.valueOf(volume * lotSize));
+//				TradingRecord tradingRecordBuy = seriesManager.run(strategy, TradeType.BUY,
+//						DecimalNum.valueOf(volume * lotSize));
 				TradingRecord tradingRecordSell = seriesManager.run(strategy, TradeType.SELL,
 						DecimalNum.valueOf(volume * lotSize));
-				final TradingStatement tradingStatementBuy = tradingStatementGenerator.generate(strategy,
-						tradingRecordBuy, seriesManager.getBarSeries());
+//				final TradingStatement tradingStatementBuy = tradingStatementGenerator.generate(strategy,
+//						tradingRecordBuy, seriesManager.getBarSeries());
 				final TradingStatement tradingStatementSell = tradingStatementGenerator.generate(strategy,
 						tradingRecordSell, seriesManager.getBarSeries());
-				writeBacktestResults(currencyPair, timeFrame, TradeType.BUY, params, barSeries, tradingRecordBuy,
-						tradingStatementBuy.getPerformanceReport(), tradingStatementBuy.getPositionStatsReport());
+//				writeBacktestResults(currencyPair, timeFrame, TradeType.BUY, params, barSeries, tradingRecordBuy,
+//						tradingStatementBuy.getPerformanceReport(), tradingStatementBuy.getPositionStatsReport());
 				writeBacktestResults(currencyPair, timeFrame, TradeType.SELL, params, barSeries, tradingRecordSell,
 						tradingStatementSell.getPerformanceReport(), tradingStatementSell.getPositionStatsReport());
 				Collections.reverse(params);
@@ -149,11 +150,12 @@ public class Backtest {
 				params.add(value);
 				backtest(currencyPair, timeFrame, series, params, paramConfigs, paramIndex - 1);
 				if (paramIndex == paramConfigs.size() - 1) {
-					log.info("Completed " + QuoteListener.roundOff((completedPieces++ / totalPieces * 100), 2) + "%");
+					log.info("Completed " + QuoteListener.roundOff((++completedPieces / totalPieces * 100), 2) + "%");
 				}
 				params.remove(params.size() - 1);
 			}
 		}
+
 	}
 
 	private static void writeBacktestResults(String currencyPair, Timeframe timeFrame, TradeType tradeType,
@@ -186,12 +188,13 @@ public class Backtest {
 		return criterion.calculate(barSeries, tradingRecord).doubleValue();
 	}
 
-	private static Map<String, BarSeries> initSeries(List<String> currencyPairs, List<Timeframe> timeFrames) {
+	private static Map<String, BarSeries> initSeries(List<String> currencyPairs, List<Timeframe> timeFrames,
+			TimePeriod timePeriod) {
 		Map<String, BarSeries> series = new HashMap<>();
 		for (String currencyPair : currencyPairs) {
 			for (Timeframe timeFrame : timeFrames) {
 				series.put(currencyPair + SERIES_JOINER + timeFrame.toString(),
-						SeriesUtil.initMovingBarSeries(currencyPair, timeFrame, 1000));
+						SeriesUtil.initMovingBarSeries(currencyPair, timeFrame, timePeriod));
 			}
 		}
 		return series;

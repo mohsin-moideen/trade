@@ -2,6 +2,7 @@ package org.trade.utils.meta_api;
 
 import java.lang.reflect.Type;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.http.client.methods.HttpGet;
@@ -35,21 +36,43 @@ public class MarketDataUtil {
 	}
 
 	public static List<Candle> getHistoricCandles(String symbol, Timeframe timeframe, Date startDate, Integer limit) {
-		if (limit > 1000) {
-			limit = 1000; // max limit is 1000
+		List<Candle> historicCandles = new LinkedList<>();
+
+		int candlesToFetch = 0;
+		while (limit > 0) {
+			if (limit > 1000) {
+				candlesToFetch = 1000; // max limit is 1000
+			} else {
+				candlesToFetch = limit;
+			}
+			limit -= candlesToFetch;
+			String historicCandlesEndpoint = Constants.HISTORIC_DATA_ENDPOINT.replace("{symbol}", symbol)
+					.replace("{timeframe}", timeframe.toString()) + "?limit=" + candlesToFetch;
+			System.out.println("historicCandles size " + historicCandles.size());
+
+			if (!historicCandles.isEmpty()) {
+				Candle lastCandle = historicCandles.get(0);
+				System.out.println("lastcandle date " + lastCandle.getZonedDate().toOffsetDateTime().toString());
+				System.out.println("lastcandle  " + lastCandle.toString());
+
+				historicCandlesEndpoint += "&startTime=" + lastCandle.getZonedDate().toOffsetDateTime().toString();
+			}
+			System.out.println("historicCandlesEndpoint " + historicCandlesEndpoint);
+			HttpGet request = new HttpGet(historicCandlesEndpoint);
+			request.addHeader("auth-token", Constants.META_API_API_KEY);
+			try {
+				String response = HttpUtils.getStringResponse(request);
+				log.debug("result HistoricCandlesResponse " + response);
+				List<Candle> candles = parseHistoricCandlesResponse(response);
+				System.out.println("new index 0" + candles.get(0).toString());
+				System.out.println("new index last" + candles.get(candles.size() - 1).toString());
+
+				historicCandles.addAll(0, candles);
+			} catch (Exception e) {
+				log.error("Error invoking historic Candles Endpoint from metaapi", e);
+			}
 		}
-		final String historicCandlesEndpoint = Constants.HISTORIC_DATA_ENDPOINT.replace("{symbol}", symbol)
-				.replace("{timeframe}", timeframe.toString()) + "?limit=" + limit;
-		HttpGet request = new HttpGet(historicCandlesEndpoint);
-		request.addHeader("auth-token", Constants.META_API_API_KEY);
-		List<Candle> historicCandles = null;
-		try {
-			String response = HttpUtils.getStringResponse(request);
-			log.debug("result HistoricCandlesResponse " + response);
-			historicCandles = parseHistoricCandlesResponse(response);
-		} catch (Exception e) {
-			log.error("Error invoking historic Candles Endpoint from metaapi", e);
-		}
+		log.info("Number of candles fetched " + historicCandles.size());
 		log.debug("historicCandles " + historicCandles);
 		return historicCandles;
 	}

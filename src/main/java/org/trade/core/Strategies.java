@@ -41,6 +41,26 @@ public class Strategies {
 		RSIIndicator rsiIndicator = new RSIIndicator(closePrice, rsiIndicatorLength.intValue());
 		ADXIndicator adxIndicator = new ADXIndicator(series, adxIndicatorLength.intValue());
 		EMAIndicator emaIndicator = new EMAIndicator(closePrice, emaIndicatorLength.intValue());
+		Rule entryRule = new CrossedDownIndicatorRule(rsiIndicator, 80).and(new OverIndicatorRule(adxIndicator, 30))
+				.and(new UnderIndicatorRule(emaIndicator, 50));
+		Rule exitRule = new StopGainRule(closePrice, stopGainPercentage)
+				.or(new StopLossRule(closePrice, stopLossPercentage));
+		return new BaseStrategy(entryRule, exitRule);
+	}
+
+	public static Strategy getEmaRsiAdxSellStrategy(BarSeries series, List<Num> params) {
+		validateParamCount(params, 5);
+		return getEmaRsiAdxSellStrategy(series, params.get(0), params.get(1), params.get(2), params.get(3),
+				params.get(4));
+	}
+
+	public static Strategy getEmaRsiAdxSellStrategy(BarSeries series, Num rsiIndicatorLength, Num adxIndicatorLength,
+			Num emaIndicatorLength, Num stopGainPercentage, Num stopLossPercentage) {
+		validate(series);
+		ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
+		RSIIndicator rsiIndicator = new RSIIndicator(closePrice, rsiIndicatorLength.intValue());
+		ADXIndicator adxIndicator = new ADXIndicator(series, adxIndicatorLength.intValue());
+		EMAIndicator emaIndicator = new EMAIndicator(closePrice, emaIndicatorLength.intValue());
 		Rule entryRule = new UnderIndicatorRule(rsiIndicator, 30).and(new OverIndicatorRule(adxIndicator, 30))
 				.and(new OverIndicatorRule(emaIndicator, 50));
 		Rule exitRule = new StopGainRule(closePrice, stopGainPercentage)
