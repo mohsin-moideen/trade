@@ -1,6 +1,7 @@
 package org.trade.utils.meta_api;
 
 import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -52,10 +53,11 @@ public class MarketDataUtil {
 
 			if (!historicCandles.isEmpty()) {
 				Candle lastCandle = historicCandles.get(0);
-				System.out.println("lastcandle date " + lastCandle.getZonedDate().toOffsetDateTime().toString());
-				System.out.println("lastcandle  " + lastCandle.toString());
+				System.out.println("first candle date " + lastCandle.getZonedDate().toOffsetDateTime().toString());
+				historicCandlesEndpoint += "&startTime="
+						+ new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'").format(lastCandle.getTime());
+				// historicCandles.remove(0);
 
-				historicCandlesEndpoint += "&startTime=" + lastCandle.getZonedDate().toOffsetDateTime().toString();
 			}
 			System.out.println("historicCandlesEndpoint " + historicCandlesEndpoint);
 			HttpGet request = new HttpGet(historicCandlesEndpoint);
@@ -65,8 +67,7 @@ public class MarketDataUtil {
 				log.debug("result HistoricCandlesResponse " + response);
 				List<Candle> candles = parseHistoricCandlesResponse(response);
 				System.out.println("new index 0" + candles.get(0).toString());
-				System.out.println("new index last" + candles.get(candles.size() - 1).toString());
-
+				System.out.println("new index end" + candles.get(candles.size() - 1).toString());
 				historicCandles.addAll(0, candles);
 			} catch (Exception e) {
 				log.error("Error invoking historic Candles Endpoint from metaapi", e);
