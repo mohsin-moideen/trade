@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.apache.http.client.methods.HttpGet;
 import org.apache.logging.log4j.LogManager;
@@ -38,7 +39,8 @@ public class MarketDataUtil {
 
 	public static List<Candle> getHistoricCandles(String symbol, Timeframe timeframe, Date startDate, Integer limit) {
 		List<Candle> historicCandles = new LinkedList<>();
-
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
+		sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
 		int candlesToFetch = 0;
 		while (limit > 0) {
 			if (limit > 1000) {
@@ -54,9 +56,8 @@ public class MarketDataUtil {
 			if (!historicCandles.isEmpty()) {
 				Candle lastCandle = historicCandles.get(0);
 				System.out.println("first candle date " + lastCandle.getZonedDate().toOffsetDateTime().toString());
-				historicCandlesEndpoint += "&startTime="
-						+ new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'").format(lastCandle.getTime());
-				// historicCandles.remove(0);
+				historicCandlesEndpoint += "&startTime=" + sdf.format(lastCandle.getTime());
+				historicCandles.remove(0);
 
 			}
 			System.out.println("historicCandlesEndpoint " + historicCandlesEndpoint);
