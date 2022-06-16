@@ -8,6 +8,7 @@ import org.ta4j.core.Position;
 import org.ta4j.core.Trade;
 import org.ta4j.core.Trade.TradeType;
 import org.ta4j.core.cost.CostModel;
+import org.ta4j.core.num.DoubleNum;
 import org.ta4j.core.num.Num;
 import org.trade.utils.TelegramUtils;
 import org.trade.utils.meta_api.MetaApiUtil;
@@ -117,11 +118,12 @@ public class FxPosition extends Position {
 	public FxTrade operate(int index, Num price, Num amount, String symbol) {
 		FxTrade trade = null;
 		if (isNew()) {
-			trade = new FxTrade(index, startingType, price, amount, transactionCostModel);
 			// redundant check to prevent multiple open orders on same entry. do not remove!
 			if (mtOrderId == null && mtPosition == null) {
 				MetatraderTradeResponse tradeOrder = executeTrade(startingType, price, amount, symbol);
-				if (tradeOrder != null) {
+				if (tradeOrder != null && mtPosition != null) {
+					trade = new FxTrade(index, startingType, DoubleNum.valueOf(mtPosition.openPrice), amount,
+							transactionCostModel);
 					entry = trade;
 					mtOrderId = tradeOrder.orderId;
 				}
