@@ -8,8 +8,9 @@ import org.ta4j.core.Position;
 import org.ta4j.core.Trade;
 import org.ta4j.core.Trade.TradeType;
 import org.ta4j.core.cost.CostModel;
-import org.ta4j.core.num.DoubleNum;
+import org.ta4j.core.num.DecimalNum;
 import org.ta4j.core.num.Num;
+import org.trade.utils.JsonUtils;
 import org.trade.utils.TelegramUtils;
 import org.trade.utils.meta_api.MetaApiUtil;
 import org.trade.utils.meta_api.TradeUtil;
@@ -122,7 +123,7 @@ public class FxPosition extends Position {
 			if (mtOrderId == null && mtPosition == null) {
 				MetatraderTradeResponse tradeOrder = executeTrade(startingType, price, amount, symbol);
 				if (tradeOrder != null && mtPosition != null) {
-					trade = new FxTrade(index, startingType, DoubleNum.valueOf(mtPosition.openPrice), amount,
+					trade = new FxTrade(index, startingType, DecimalNum.valueOf(mtPosition.openPrice), amount,
 							transactionCostModel);
 					entry = trade;
 					mtOrderId = tradeOrder.orderId;
@@ -133,9 +134,10 @@ public class FxPosition extends Position {
 			if (index < entry.getIndex()) {
 				throw new IllegalStateException("The index i is less than the entryTrade index");
 			}
-			trade = new FxTrade(index, startingType.complementType(), price, amount, transactionCostModel);
 			MetaApiConnection connection = MetaApiUtil.getMetaApiConnection();
 			connection.closePosition(mtPosition.id, null); // on fail exit will not be recorded. will retry.
+			trade = new FxTrade(index, startingType.complementType(), DecimalNum.valueOf(mtPosition.currentPrice),
+					amount, transactionCostModel);
 			exit = trade;
 		}
 		return trade;
@@ -161,6 +163,7 @@ public class FxPosition extends Position {
 			if (createOrderResponse != null && createOrderResponse.orderId != null) {
 				try {
 					mtPosition = MetaApiUtil.getMetaApiConnection().getPosition(createOrderResponse.orderId).get();
+					log.info("Position opened " + JsonUtils.getString(mtPosition));
 				} catch (Exception e1) {
 					log.error("<<<FAILED TO FETCH POSITON AFTER MARKET ORDER >>>");
 					log.info("Attempting to close position!");
