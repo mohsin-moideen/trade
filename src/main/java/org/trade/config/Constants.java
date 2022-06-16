@@ -22,4 +22,7 @@ public class Constants {
 			+ META_API_ACCOUNT_ID + "/symbols/{symbol}/current-candles/{timeframe}";
 	public static String TRADE_ENDPOINT = META_API_BASE_PATH_SERVER + "/users/current/accounts/" + META_API_ACCOUNT_ID
 			+ "/trade";
+
+	public static int LOT_SIZE = 100000; // TODO: get from meta api for other pairs
+
 }

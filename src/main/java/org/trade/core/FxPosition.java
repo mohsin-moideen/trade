@@ -107,6 +107,12 @@ public class FxPosition extends Position {
 		return Objects.hash(entry, exit);
 	}
 
+	public FxTrade forcedExit(int index, Num price, Num amount) {
+		FxTrade trade = new FxTrade(index, startingType.complementType(), price, amount, transactionCostModel);
+		exit = trade;
+		return trade;
+	}
+
 	/**
 	 * Operates the position at the index-th position
 	 * 

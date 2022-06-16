@@ -23,7 +23,7 @@ public class Bot {
 		final String SYMBOL_EURUSD = "EURUSD";
 		final String SYMBOL_GBPUSD = "GBPUSD";
 
-		final Timeframe timeframe = Timeframe.one_hour;
+		final Timeframe timeframe = Timeframe.one_min;
 		final Num volume = DecimalNum.valueOf(0.2);
 		BarSeries eurusdSeries1 = SeriesUtil.initMovingBarSeries(SYMBOL_EURUSD, timeframe, 500);
 		// BarSeries eurusdSeries2 = SeriesUtil.initMovingBarSeries(SYMBOL_EURUSD,

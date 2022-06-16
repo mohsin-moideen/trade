@@ -193,6 +193,11 @@ public class FxTradingRecord implements TradingRecord {
 		return false;
 	}
 
+	public void forcedExit(int index, Num price, Num amount) {
+		Trade trade = currentPosition.forcedExit(index, price, amount);
+		recordTrade(trade, false);
+	}
+
 	@Override
 	public boolean exit(int index, Num price, Num amount) {
 		try {

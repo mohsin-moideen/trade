@@ -9,6 +9,7 @@ import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ta4j.core.Trade.TradeType;
+import org.trade.config.Constants;
 import org.trade.core.FxTradingRecord;
 import org.trade.utils.JsonUtils;
 import org.trade.utils.TelegramUtils;
@@ -29,7 +30,6 @@ public class QuoteListener extends SynchronizationListener {
 	private double triggerMultiplier;
 	private Queue<Double> prices;
 	private static final int PRICES_COUNT = 25;
-	final int LOT_SIZE;
 	private String threadName;
 
 	public QuoteListener(FxTradingRecord tradingRecord, String threadName) {
@@ -38,7 +38,6 @@ public class QuoteListener extends SynchronizationListener {
 		this.tradeType = tradingRecord.getStartingType();
 		initTriggerPoints();
 		prices = new CircularFifoQueue<Double>(PRICES_COUNT);
-		LOT_SIZE = 100000; // TODO: get from meta api for other pairs
 		this.threadName = threadName;
 
 	}
@@ -73,7 +72,8 @@ public class QuoteListener extends SynchronizationListener {
 		log.debug("currentPrice = " + currentPrice);
 		log.debug("openPosition.openPrice = " + openPosition.openPrice);
 		log.debug("openPosition.volume = " + openPosition.volume);
-		double currentProfit = getProfit(openPosition.openPrice, openPosition.volume, currentPrice, tradeType);
+		double currentProfit = getProfit(openPosition.openPrice, openPosition.volume, currentPrice, tradeType,
+				Constants.LOT_SIZE);
 		currentProfit = roundOff(currentProfit, 2);
 
 		log.info("current profit = " + currentProfit);
@@ -122,7 +122,7 @@ public class QuoteListener extends SynchronizationListener {
 	private boolean shouldCloseCounterTrade(MetatraderPosition counterPosition, TradeType actionType,
 			double counterOrderPrice) {
 		double counterOrderProfit = getProfit(counterPosition.openPrice, counterPosition.volume, counterOrderPrice,
-				actionType);
+				actionType, Constants.LOT_SIZE);
 		log.info("counter Order  profit = " + counterOrderProfit);
 		if (counterOrderProfit < -(counterPosition.volume * 10) * 2) {
 			return true;
@@ -172,7 +172,9 @@ public class QuoteListener extends SynchronizationListener {
 		return -Math.min((10 * volume * triggerMultiplier), (100 * volume));
 	}
 
-	public double getProfit(Double openPrice, Double volume, Double currentPrice, TradeType tradeType) {
+	// TODO: Move this to anotheer util class
+	public static double getProfit(Double openPrice, Double volume, Double currentPrice, TradeType tradeType,
+			int LOT_SIZE) {
 		if (tradeType == TradeType.BUY)
 			return roundOff((currentPrice - openPrice) * (volume * LOT_SIZE), 2);
 		else
@@ -193,9 +195,10 @@ public class QuoteListener extends SynchronizationListener {
 			MetaApiUtil.getMetaApiConnection().closePosition(counterPosition.id, null);
 			prices.clear();
 			TelegramUtils.sendMessage("Counter trade closed\nStrategy: " + Thread.currentThread().getName()
-					+ "\nPosition type: " + tradeType.complementType() + "\nExit price: " + counterPosition.currentPrice
-					+ "\nCounter trade profit: $" + getProfit(counterPosition.openPrice, counterPosition.volume,
-							counterPosition.currentPrice, tradeType.complementType()));
+					+ "\nPosition type: " + tradeType.complementType() + "\nEntry price: " + counterPosition.openPrice
+					+ "\nExit price: " + counterPosition.currentPrice + "\nCounter trade profit: $"
+					+ getProfit(counterPosition.openPrice, counterPosition.volume, counterPosition.currentPrice,
+							tradeType.complementType(), Constants.LOT_SIZE));
 			counterPosition = null; // clearing counter position to open if price falls
 		}
 		return false;

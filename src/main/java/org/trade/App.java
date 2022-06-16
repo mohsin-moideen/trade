@@ -7,12 +7,14 @@ import org.ta4j.core.Strategy;
 import org.ta4j.core.Trade;
 import org.ta4j.core.Trade.TradeType;
 import org.ta4j.core.num.Num;
+import org.trade.config.Constants;
 import org.trade.core.FxTradingRecord;
 import org.trade.core.beans.Candle;
 import org.trade.enums.Timeframe;
 import org.trade.utils.TelegramUtils;
 import org.trade.utils.meta_api.MarketDataUtil;
 import org.trade.utils.meta_api.MetaApiUtil;
+import org.trade.utils.meta_api.listeners.OrderSynchronizationListener;
 import org.trade.utils.meta_api.listeners.QuoteListener;
 
 /**
@@ -76,8 +78,8 @@ public class App implements Runnable {
 
 		FxTradingRecord tradingRecord = new FxTradingRecord(symbol, tradeType);
 
-//		MetaApiUtil.getMetaApiConnection().addSynchronizationListener(
-//				new OrderSynchronizationListener(tradingRecord, Thread.currentThread().getName()));
+		MetaApiUtil.getMetaApiConnection().addSynchronizationListener(
+				new OrderSynchronizationListener(series, volume, tradingRecord, Thread.currentThread().getName()));
 		QuoteListener quoteListener = new QuoteListener(tradingRecord, Thread.currentThread().getName());
 		MetaApiUtil.getMetaApiConnection().addSynchronizationListener(quoteListener);
 //		MetaApiUtil.getMetaApiConnection()
@@ -114,7 +116,7 @@ public class App implements Runnable {
 							+ exit.getNetPrice().doubleValue() + "\nProfit: $"
 							+ quoteListener.getProfit(tradingRecord.getLastEntry().getNetPrice().doubleValue(),
 									volume.doubleValue(), exit.getNetPrice().doubleValue(),
-									tradingRecord.getStartingType()));
+									tradingRecord.getStartingType(), Constants.LOT_SIZE));
 				}
 			}
 			try {
