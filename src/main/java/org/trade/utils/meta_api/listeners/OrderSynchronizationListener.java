@@ -12,6 +12,7 @@ import org.trade.core.FxTradingRecord;
 import org.trade.utils.JsonUtils;
 import org.trade.utils.TelegramUtils;
 import org.trade.utils.meta_api.MetaApiUtil;
+import org.trade.utils.meta_api.TradeUtil;
 
 import cloud.metaapi.sdk.clients.meta_api.SynchronizationListener;
 import cloud.metaapi.sdk.clients.meta_api.models.MetatraderPosition;
@@ -73,7 +74,7 @@ public class OrderSynchronizationListener extends SynchronizationListener {
 		TelegramUtils.sendMessage("Counter trade closed\nStrategy: " + Thread.currentThread().getName()
 				+ "\nPosition type: " + tradingRecord.getStartingType() + "\nEntry price: " + openPosition.openPrice
 				+ "\nExit price: " + openPosition.currentPrice + "\nCounter trade profit: $"
-				+ QuoteListener.getProfit(openPosition.openPrice, volume.doubleValue(), openPosition.currentPrice,
+				+ TradeUtil.getProfit(openPosition.openPrice, volume.doubleValue(), openPosition.currentPrice,
 						tradingRecord.getStartingType(), Constants.LOT_SIZE));
 		TelegramUtils.sendMessage("⚠️⚠️⚠️⚠️⚠️ PLEASE CLOSE THIS TRADE ON YOUR ACCOUNTS ⚠️⚠️⚠️⚠️⚠️");
 		TelegramUtils.sendMessage("⚠️⚠️⚠️⚠️⚠️ THIS TRADE IS NO LONGER TRACKED BY THE BOT ⚠️⚠️⚠️⚠️⚠️");

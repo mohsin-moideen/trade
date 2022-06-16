@@ -72,9 +72,9 @@ public class QuoteListener extends SynchronizationListener {
 		log.debug("currentPrice = " + currentPrice);
 		log.debug("openPosition.openPrice = " + openPosition.openPrice);
 		log.debug("openPosition.volume = " + openPosition.volume);
-		double currentProfit = getProfit(openPosition.openPrice, openPosition.volume, currentPrice, tradeType,
+		double currentProfit = TradeUtil.getProfit(openPosition.openPrice, openPosition.volume, currentPrice, tradeType,
 				Constants.LOT_SIZE);
-		currentProfit = roundOff(currentProfit, 2);
+		currentProfit = TradeUtil.roundOff(currentProfit, 2);
 
 		log.info("current profit = " + currentProfit);
 		if (openPosition != null && counterPosition == null) {
@@ -114,15 +114,10 @@ public class QuoteListener extends SynchronizationListener {
 		return CompletableFuture.completedFuture(null);
 	}
 
-	public static double roundOff(double number, int points) {
-		double equilizer = Math.pow(10, points);
-		return Math.round(number * equilizer) / equilizer;
-	}
-
 	private boolean shouldCloseCounterTrade(MetatraderPosition counterPosition, TradeType actionType,
 			double counterOrderPrice) {
-		double counterOrderProfit = getProfit(counterPosition.openPrice, counterPosition.volume, counterOrderPrice,
-				actionType, Constants.LOT_SIZE);
+		double counterOrderProfit = TradeUtil.getProfit(counterPosition.openPrice, counterPosition.volume,
+				counterOrderPrice, actionType, Constants.LOT_SIZE);
 		log.info("counter Order  profit = " + counterOrderProfit);
 		if (counterOrderProfit < -(counterPosition.volume * 10) * 2) {
 			return true;
@@ -157,28 +152,16 @@ public class QuoteListener extends SynchronizationListener {
 	private boolean isBullish() {
 		double trend = 0.0;
 		List<Double> priceList = new LinkedList<>(prices);
-		System.out.print(roundOff(priceList.get(0), 5) + ", ");
 		for (int i = 1; i < priceList.size(); i++) {
 			trend += (priceList.get(i) - priceList.get(i - 1));
-			System.out.print(roundOff(priceList.get(i), 5) + ", ");
 		}
-		System.out.println();
-		log.info("Trend = " + roundOff(trend, 5));
+		log.info("Trend = " + TradeUtil.roundOff(trend, 5));
 		return trend > 0;
 	}
 
 	// Talk to roof about this
 	private double getCounterTradeTriggerLoss(double volume) {
 		return -Math.min((10 * volume * triggerMultiplier), (100 * volume));
-	}
-
-	// TODO: Move this to anotheer util class
-	public static double getProfit(Double openPrice, Double volume, Double currentPrice, TradeType tradeType,
-			int LOT_SIZE) {
-		if (tradeType == TradeType.BUY)
-			return roundOff((currentPrice - openPrice) * (volume * LOT_SIZE), 2);
-		else
-			return roundOff((openPrice - currentPrice) * (volume * LOT_SIZE), 2);
 	}
 
 	/**
@@ -197,8 +180,8 @@ public class QuoteListener extends SynchronizationListener {
 			TelegramUtils.sendMessage("Counter trade closed\nStrategy: " + Thread.currentThread().getName()
 					+ "\nPosition type: " + tradeType.complementType() + "\nEntry price: " + counterPosition.openPrice
 					+ "\nExit price: " + counterPosition.currentPrice + "\nCounter trade profit: $"
-					+ getProfit(counterPosition.openPrice, counterPosition.volume, counterPosition.currentPrice,
-							tradeType.complementType(), Constants.LOT_SIZE));
+					+ TradeUtil.getProfit(counterPosition.openPrice, counterPosition.volume,
+							counterPosition.currentPrice, tradeType.complementType(), Constants.LOT_SIZE));
 			counterPosition = null; // clearing counter position to open if price falls
 		}
 		return false;

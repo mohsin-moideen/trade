@@ -14,6 +14,7 @@ import org.trade.enums.Timeframe;
 import org.trade.utils.TelegramUtils;
 import org.trade.utils.meta_api.MarketDataUtil;
 import org.trade.utils.meta_api.MetaApiUtil;
+import org.trade.utils.meta_api.TradeUtil;
 import org.trade.utils.meta_api.listeners.OrderSynchronizationListener;
 import org.trade.utils.meta_api.listeners.QuoteListener;
 
@@ -114,7 +115,7 @@ public class App implements Runnable {
 					TelegramUtils.sendMessage("Position exited\nStrategy: " + Thread.currentThread().getName()
 							+ "\nPosition type: " + tradingRecord.getStartingType() + "\nExit price: "
 							+ exit.getNetPrice().doubleValue() + "\nProfit: $"
-							+ quoteListener.getProfit(tradingRecord.getLastEntry().getNetPrice().doubleValue(),
+							+ TradeUtil.getProfit(tradingRecord.getLastEntry().getNetPrice().doubleValue(),
 									volume.doubleValue(), exit.getNetPrice().doubleValue(),
 									tradingRecord.getStartingType(), Constants.LOT_SIZE));
 				}

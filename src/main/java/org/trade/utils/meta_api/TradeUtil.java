@@ -72,6 +72,19 @@ public class TradeUtil {
 		return true;
 	}
 
+	public static double roundOff(double number, int points) {
+		double equilizer = Math.pow(10, points);
+		return Math.round(number * equilizer) / equilizer;
+	}
+
+	public static double getProfit(Double openPrice, Double volume, Double currentPrice, TradeType tradeType,
+			int LOT_SIZE) {
+		if (tradeType == TradeType.BUY)
+			return roundOff((currentPrice - openPrice) * (volume * LOT_SIZE), 2);
+		else
+			return roundOff((openPrice - currentPrice) * (volume * LOT_SIZE), 2);
+	}
+
 	public static void main(String[] args) {
 		TradeRequest request = new TradeRequest();
 		request.setOpenPrice(1.0585);

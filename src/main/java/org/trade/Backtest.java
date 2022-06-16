@@ -34,7 +34,7 @@ import org.trade.core.beans.StrategyParamsConfig;
 import org.trade.enums.TimePeriod;
 import org.trade.enums.Timeframe;
 import org.trade.loaders.SeriesUtil;
-import org.trade.utils.meta_api.listeners.QuoteListener;
+import org.trade.utils.meta_api.TradeUtil;
 
 import com.opencsv.CSVWriter;
 
@@ -150,7 +150,7 @@ public class Backtest {
 				params.add(value);
 				backtest(currencyPair, timeFrame, series, params, paramConfigs, paramIndex - 1);
 				if (paramIndex == paramConfigs.size() - 1) {
-					log.info("Completed " + QuoteListener.roundOff((++completedPieces / totalPieces * 100), 2) + "%");
+					log.info("Completed " + TradeUtil.roundOff((++completedPieces / totalPieces * 100), 2) + "%");
 				}
 				params.remove(params.size() - 1);
 			}

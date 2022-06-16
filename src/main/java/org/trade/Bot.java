@@ -21,7 +21,7 @@ public class Bot {
 
 	public static void main(String[] args) {
 		final String SYMBOL_EURUSD = "EURUSD";
-		final String SYMBOL_GBPUSD = "GBPUSD";
+		// final String SYMBOL_GBPUSD = "GBPUSD";
 
 		final Timeframe timeframe = Timeframe.one_min;
 		final Num volume = DecimalNum.valueOf(0.2);
