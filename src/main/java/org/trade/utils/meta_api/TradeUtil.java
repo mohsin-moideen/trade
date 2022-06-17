@@ -47,10 +47,10 @@ public class TradeUtil {
 			} else {
 				if (tradeRequest.getActionType() == TradeType.BUY) {
 					order = connection.createLimitBuyOrder(tradeRequest.getSymbol(), tradeRequest.getVolume(),
-							tradeRequest.getOpenPrice(), stopLoss, null, null).get();
+							tradeRequest.getOpenPrice(), stopLoss, takeProfit, null).get();
 				} else {
 					order = connection.createLimitSellOrder(tradeRequest.getSymbol(), tradeRequest.getVolume(),
-							tradeRequest.getOpenPrice(), stopLoss, stopLoss, null).get();
+							tradeRequest.getOpenPrice(), stopLoss, takeProfit, null).get();
 				}
 			}
 			log.info("Order placed " + JsonUtils.getString(order));
