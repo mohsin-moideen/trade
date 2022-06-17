@@ -14,12 +14,14 @@ import org.trade.core.Strategies;
 import org.trade.core.beans.StrategyConfig;
 import org.trade.enums.Timeframe;
 import org.trade.loaders.SeriesUtil;
+import org.trade.utils.TelegramUtils;
 
 public class Bot {
 
 	private static final Logger log = LogManager.getLogger(Bot.class);
 
 	public static void main(String[] args) {
+		TelegramUtils.isDisabled = true;
 		final String SYMBOL_EURUSD = "EURUSD";
 		// final String SYMBOL_GBPUSD = "GBPUSD";
 
