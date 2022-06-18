@@ -168,8 +168,8 @@ public class FxPosition extends Position {
 		request.setVolume(amount.doubleValue());
 		request.setSymbol(symbol);
 		request.setActionType(tradeType);
-		request.setStopLoss(getStopLossPrice(price.doubleValue(), stopLoss));
-		request.setTakeProfit(getTakeProfitPrice(price.doubleValue(), takeProfit));
+		request.setStopLoss(getStopLossPrice(tradeType, price.doubleValue(), stopLoss));
+		request.setTakeProfit(getTakeProfitPrice(tradeType, price.doubleValue(), takeProfit));
 		MetatraderTradeResponse createOrderResponse = null;
 		try {
 			log.info("Placing market price order!");
@@ -205,12 +205,32 @@ public class FxPosition extends Position {
 		return createOrderResponse;
 	}
 
-	private Double getTakeProfitPrice(Double price, Double takeProfit) {
-		return takeProfit == null ? null : (price + (price * takeProfit / 100));
+	private Double getTakeProfitPrice(TradeType tradeType, Double price, Double takeProfit) {
+		if (tradeType == TradeType.BUY) {
+			return getUpwardChange(price, takeProfit);
+
+		} else {
+			return getDownwardChange(price, takeProfit);
+
+		}
 	}
 
-	private Double getStopLossPrice(Double price, Double stopLoss) {
-		return stopLoss == null ? null : (price - (price * stopLoss / 100));
+	private Double getStopLossPrice(TradeType tradeType, Double price, Double stopLoss) {
+		if (tradeType == TradeType.BUY) {
+			return getDownwardChange(price, stopLoss);
+
+		} else {
+			return getUpwardChange(price, stopLoss);
+
+		}
+	}
+
+	private Double getUpwardChange(Double price, Double changePercentage) {
+		return changePercentage == null ? null : (price + (price * changePercentage / 100));
+	}
+
+	private Double getDownwardChange(Double price, Double changePercentage) {
+		return changePercentage == null ? null : (price - (price * changePercentage / 100));
 	}
 
 	/**
