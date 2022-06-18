@@ -116,18 +116,21 @@ public class FxPosition extends Position {
 	/**
 	 * Operates the position at the index-th position
 	 * 
-	 * @param index  the bar index
-	 * @param price  the price
-	 * @param amount the amount
+	 * @param index      the bar index
+	 * @param price      the price
+	 * @param amount     the amount
 	 * @param symbol
+	 * @param takeProfit
+	 * @param stopLoss
 	 * @return the trade
 	 */
-	public FxTrade operate(int index, Num price, Num amount, String symbol) {
+	public FxTrade operate(int index, Num price, Num amount, String symbol, Double stopLoss, Double takeProfit) {
 		FxTrade trade = null;
 		if (isNew()) {
 			// redundant check to prevent multiple open orders on same entry. do not remove!
 			if (mtOrderId == null && mtPosition == null) {
-				MetatraderTradeResponse tradeOrder = executeTrade(startingType, price, amount, symbol);
+				MetatraderTradeResponse tradeOrder = executeTrade(startingType, price, amount, symbol, stopLoss,
+						takeProfit);
 				if (tradeOrder != null && mtPosition != null) {
 					trade = new FxTrade(index, startingType, DecimalNum.valueOf(mtPosition.openPrice), amount,
 							transactionCostModel);
@@ -149,20 +152,25 @@ public class FxPosition extends Position {
 		return trade;
 	}
 
-	private MetatraderTradeResponse executeTrade(TradeType tradeType, Num price, Num amount, String symbol) {
+	/**
+	 * 
+	 * @param tradeType
+	 * @param price
+	 * @param amount
+	 * @param symbol
+	 * @param stopLoss
+	 * @param takeProfit
+	 * @return trade reponse after placing MARKET ORDER
+	 */
+	private MetatraderTradeResponse executeTrade(TradeType tradeType, Num price, Num amount, String symbol,
+			Double stopLoss, Double takeProfit) {
 		TradeRequest request = new TradeRequest();
-		request.setOpenPrice(price.doubleValue());
 		request.setVolume(amount.doubleValue());
 		request.setSymbol(symbol);
 		request.setActionType(tradeType);
+		request.setStopLoss(getStopLossPrice(price.doubleValue(), stopLoss));
+		request.setTakeProfit(getTakeProfitPrice(price.doubleValue(), takeProfit));
 		MetatraderTradeResponse createOrderResponse = null;
-//		try {
-//			createOrderResponse = TradeUtil.createOrder(request);
-//		} catch (TradeException e) {
-//			// invalid price code from meta api
-//			if (e.numericCode == 10015) {
-//		log.error("Failed to place limit order due to invalid price");
-		request.setOpenPrice(null);
 		try {
 			log.info("Placing market price order!");
 			createOrderResponse = TradeUtil.createOrder(request);
@@ -194,9 +202,15 @@ public class FxPosition extends Position {
 		} catch (TradeException e1) {
 			log.error("Failed to place market order", e1);
 		}
-//			}
-//		}
 		return createOrderResponse;
+	}
+
+	private Double getTakeProfitPrice(Double price, Double takeProfit) {
+		return takeProfit == null ? null : (price + (price * takeProfit / 100));
+	}
+
+	private Double getStopLossPrice(Double price, Double stopLoss) {
+		return stopLoss == null ? null : (price - (price * stopLoss / 100));
 	}
 
 	/**

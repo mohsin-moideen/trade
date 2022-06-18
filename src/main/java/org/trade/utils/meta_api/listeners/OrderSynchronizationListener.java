@@ -71,13 +71,11 @@ public class OrderSynchronizationListener extends SynchronizationListener {
 		}
 		log.info("Current position exited!");
 		log.info("Closing price " + openPosition.currentPrice);
-		TelegramUtils.sendMessage("Counter trade closed\nStrategy: " + Thread.currentThread().getName()
-				+ "\nPosition type: " + tradingRecord.getStartingType() + "\nEntry price: " + openPosition.openPrice
-				+ "\nExit price: " + openPosition.currentPrice + "\nCounter trade profit: $"
+		TelegramUtils.sendMessage("Trade closed\nStrategy: " + Thread.currentThread().getName() + "\nPosition type: "
+				+ tradingRecord.getStartingType() + "\nEntry price: " + openPosition.openPrice + "\nExit price: "
+				+ openPosition.currentPrice + "\nprofit: $"
 				+ TradeUtil.getProfit(openPosition.openPrice, volume.doubleValue(), openPosition.currentPrice,
 						tradingRecord.getStartingType(), Constants.LOT_SIZE));
-		TelegramUtils.sendMessage("⚠️⚠️⚠️⚠️⚠️ PLEASE CLOSE THIS TRADE ON YOUR ACCOUNTS ⚠️⚠️⚠️⚠️⚠️");
-		TelegramUtils.sendMessage("⚠️⚠️⚠️⚠️⚠️ THIS TRADE IS NO LONGER TRACKED BY THE BOT ⚠️⚠️⚠️⚠️⚠️");
 
 		return CompletableFuture.completedFuture(null);
 	}

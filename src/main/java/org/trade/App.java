@@ -8,6 +8,7 @@ import org.ta4j.core.Trade;
 import org.ta4j.core.Trade.TradeType;
 import org.ta4j.core.num.Num;
 import org.trade.config.Constants;
+import org.trade.core.FxStrategy;
 import org.trade.core.FxTradingRecord;
 import org.trade.core.beans.Candle;
 import org.trade.enums.Timeframe;
@@ -95,7 +96,8 @@ public class App implements Runnable {
 			int endIndex = series.getEndIndex();
 			if (strategy.shouldEnter(endIndex)) {
 				// Our strategy should enter
-				boolean entered = tradingRecord.enter(endIndex, lastClosePrice, volume);
+				boolean entered = tradingRecord.enter(endIndex, lastClosePrice, volume, getStopLoss(strategy),
+						getTakeProfit(strategy));
 				if (entered) {
 					Trade entry = tradingRecord.getLastEntry();
 					log.info("Entered on " + entry.getIndex() + " (price=" + entry.getNetPrice().doubleValue()
@@ -127,5 +129,19 @@ public class App implements Runnable {
 				log.error(e.getMessage(), e);
 			}
 		}
+	}
+
+	private Double getTakeProfit(Strategy strategy) {
+		if (strategy instanceof FxStrategy) {
+			return ((FxStrategy) strategy).getStopLoss();
+		}
+		return null;
+	}
+
+	private Double getStopLoss(Strategy strategy) {
+		if (strategy instanceof FxStrategy) {
+			return ((FxStrategy) strategy).getTakeProfit();
+		}
+		return null;
 	}
 }

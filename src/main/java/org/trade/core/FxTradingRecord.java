@@ -125,39 +125,6 @@ public class FxTradingRecord implements TradingRecord {
 		currentPosition = new FxPosition(entryTradeType, transactionCostModel, holdingCostModel);
 	}
 
-	/**
-	 * Constructor.
-	 *
-	 * @param trades the trades to be recorded (cannot be empty)
-	 */
-	public FxTradingRecord(Trade... trades) {
-		this(new ZeroCostModel(), new ZeroCostModel(), trades);
-	}
-
-	/**
-	 * Constructor.
-	 *
-	 * @param transactionCostModel the cost model for transactions of the asset
-	 * @param holdingCostModel     the cost model for holding asset (e.g. borrowing)
-	 * @param trades               the trades to be recorded (cannot be empty)
-	 */
-	public FxTradingRecord(CostModel transactionCostModel, CostModel holdingCostModel, Trade... trades) {
-		this(trades[0].getType(), transactionCostModel, holdingCostModel);
-		for (Trade o : trades) {
-			boolean newTradeWillBeAnEntry = currentPosition.isNew();
-			if (newTradeWillBeAnEntry && o.getType() != startingType) {
-				// Special case for entry/exit types reversal
-				// E.g.: BUY, SELL,
-				// BUY, SELL,
-				// SELL, BUY,
-				// BUY, SELL
-				currentPosition = new FxPosition(o.getType(), transactionCostModel, holdingCostModel);
-			}
-			Trade newTrade = currentPosition.operate(o.getIndex(), o.getPricePerAsset(), o.getAmount(), name);
-			recordTrade(newTrade, newTradeWillBeAnEntry);
-		}
-	}
-
 	@Override
 	public String getName() {
 		return name;
@@ -173,24 +140,32 @@ public class FxTradingRecord implements TradingRecord {
 		return currentPosition;
 	}
 
-	@Override
-	public void operate(int index, Num price, Num amount) {
+	public void operate(int index, Num price, Num amount, Double stopLoss, Double takeProfit) {
 		if (currentPosition.isClosed()) {
 			// Current position closed, should not occur
 			throw new IllegalStateException("Current position should not be closed");
 		}
 		boolean newTradeWillBeAnEntry = currentPosition.isNew();
-		Trade newTrade = currentPosition.operate(index, price, amount, name);
+		Trade newTrade = currentPosition.operate(index, price, amount, name, stopLoss, takeProfit);
 		recordTrade(newTrade, newTradeWillBeAnEntry);
+	}
+
+	public boolean enter(int index, Num price, Num amount, Double stopLoss, Double takeProfit) {
+		if (currentPosition.isNew()) {
+			operate(index, price, amount, stopLoss, takeProfit);
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public void operate(int index, Num price, Num amount) {
+		operate(index, price, amount, null, null);
 	}
 
 	@Override
 	public boolean enter(int index, Num price, Num amount) {
-		if (currentPosition.isNew()) {
-			operate(index, price, amount);
-			return true;
-		}
-		return false;
+		return enter(index, price, amount, null, null);
 	}
 
 	public void forcedExit(int index, Num price, Num amount) {

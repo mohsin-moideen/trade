@@ -9,15 +9,12 @@ public class TradeRequest {
 	private TradeType actionType;
 	private String symbol;
 	private Double volume;
-	/**
-	 * If openPrice is null, order will be placed at market price
-	 */
-	private Double openPrice;
+	private Double openPrice;// If openPrice is null, order will be placed at market price
 	private Double stopLoss;
 	private Double takeProfit;
 	private StopUnits stopLossUnits;
 	private StopUnits takeProfitUnits;
-	private String clientId; // tradeId
+	private String clientId; // custom trade Id for our use if needed
 
 	public TradeType getActionType() {
 		return actionType;
