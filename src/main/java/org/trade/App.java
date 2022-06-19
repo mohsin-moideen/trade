@@ -52,12 +52,9 @@ public class App implements Runnable {
 		// null check for candle - happens when meta api is down!!
 		if (candle == null) {
 			log.error("Failed to fetch candle data from Meta api./n Exiting all trades!");
-			TelegramUtils.sendMessage(
-					"⚠️⚠️⚠️⚠️⚠️  Failed to fetch candle data from Meta api./nAttempting to exit all trades! ⚠️⚠️⚠️⚠️⚠️");
-			TelegramUtils.sendMessage(
-					"⚠️⚠️⚠️⚠️⚠️  Please check your trading account to ensure all trades have been closed!\nIf not closed, please close them immediately ⚠️⚠️⚠️⚠️⚠️");
-			TelegramUtils.sendMessage("⚠️⚠️⚠️⚠️⚠️  Please do not ignore this message! ⚠️⚠️⚠️⚠️⚠️");
-
+			TelegramUtils.sendMessage("⚠️⚠️⚠️⚠️⚠️  Failed to fetch candle data from Meta api. ⚠️⚠️⚠️⚠️⚠️");
+			TelegramUtils.sendMessage("⚠️⚠️⚠️⚠️⚠️ Please ensure Meta api server is running ⚠️⚠️⚠️⚠️⚠️");
+			TelegramUtils.sendMessage("Do not ignore this message!");
 			return;
 		}
 		if (candle.getZonedDate().isAfter(series.getLastBar().getEndTime())) {
@@ -84,8 +81,6 @@ public class App implements Runnable {
 				new OrderSynchronizationListener(series, volume, tradingRecord, Thread.currentThread().getName()));
 		QuoteListener quoteListener = new QuoteListener(tradingRecord, Thread.currentThread().getName());
 		MetaApiUtil.getMetaApiConnection().addSynchronizationListener(quoteListener);
-//		MetaApiUtil.getMetaApiConnection()
-//				.addSynchronizationListener(new PriceListener(series, SYMBOL, tradingRecord.getStartingType()));
 
 		log.info("Initialization complete");
 
