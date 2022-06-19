@@ -129,16 +129,23 @@
 	        </archive>
 	      </configuration>
 	    </plugin>
-	     <plugin>
+         <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>3.2.4</version>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.3.0</version>
         <executions>
           <execution>
+            <id>copy-dependencies</id>
             <phase>package</phase>
             <goals>
-              <goal>shade</goal>
-            </goals>
+ 				<goal>copy-dependencies</goal>   
+         	 </goals>
+            <configuration>
+          <outputDirectory>${project.build.directory}</outputDirectory>
+          <overWriteReleases>false</overWriteReleases>
+           <useBaseVersion>false</useBaseVersion>
+          <overWriteSnapshots>true</overWriteSnapshots>
+        </configuration>
           </execution>
         </executions>
       </plugin>
