@@ -21,38 +21,39 @@ public class Bot {
 	private static final Logger log = LogManager.getLogger(Bot.class);
 
 	public static void main(String[] args) {
-		TelegramUtils.isDisabled = true;
+		TelegramUtils.isDisabled = false;
 		final String SYMBOL_EURUSD = "EURUSD";
-		// final String SYMBOL_GBPUSD = "GBPUSD";
+		final String SYMBOL_GBPUSD = "GBPUSD";
 
-		final Timeframe timeframe = Timeframe.one_min;
+		final Timeframe timeframe = Timeframe.fifteen_min;
 		final Num volume = DecimalNum.valueOf(0.2);
 		BarSeries eurusdSeries1 = SeriesUtil.initMovingBarSeries(SYMBOL_EURUSD, timeframe, 500);
-		// BarSeries eurusdSeries2 = SeriesUtil.initMovingBarSeries(SYMBOL_EURUSD,
-		// timeframe, 500);
+		BarSeries eurusdSeries2 = SeriesUtil.initMovingBarSeries(SYMBOL_EURUSD, timeframe, 500);
 
 		Strategy strategy1 = Strategies.getVwap9EmaSellStrategy(eurusdSeries1, DecimalNum.valueOf(14),
 				DecimalNum.valueOf(0.2), DecimalNum.valueOf(0.09));
-//		Strategy strategy2 = Strategies.getVwap9EmaBuyStrategy(eurusdSeries2);
+		Strategy strategy2 = Strategies.getVwap9EmaBuyStrategy(eurusdSeries2, DecimalNum.valueOf(14),
+				DecimalNum.valueOf(0.2), DecimalNum.valueOf(0.09));
 //
-//		BarSeries gbpusdSeries1 = SeriesUtil.initMovingBarSeries(SYMBOL_GBPUSD, timeframe, 500);
-//		BarSeries gbpusdSeries2 = SeriesUtil.initMovingBarSeries(SYMBOL_GBPUSD, timeframe, 500);
-//
-//		Strategy strategy3 = Strategies.getVwap9EmaSellStrategy(gbpusdSeries1, DecimalNum.valueOf(0.05),
-//				DecimalNum.valueOf(0.02));
-//		Strategy strategy4 = Strategies.getVwap9EmaBuyStrategy(gbpusdSeries2);
+		BarSeries gbpusdSeries1 = SeriesUtil.initMovingBarSeries(SYMBOL_GBPUSD, timeframe, 500);
+		BarSeries gbpusdSeries2 = SeriesUtil.initMovingBarSeries(SYMBOL_GBPUSD, timeframe, 500);
+
+		Strategy strategy3 = Strategies.getVwap9EmaSellStrategy(gbpusdSeries1, DecimalNum.valueOf(14),
+				DecimalNum.valueOf(0.2), DecimalNum.valueOf(0.09));
+		Strategy strategy4 = Strategies.getVwap9EmaBuyStrategy(gbpusdSeries2, DecimalNum.valueOf(14),
+				DecimalNum.valueOf(0.2), DecimalNum.valueOf(0.09));
 
 		List<StrategyConfig> strategyConfigs = new LinkedList<>();
 
 		strategyConfigs.add(new StrategyConfig("EURUSD-Vwap9EmaSell", SYMBOL_EURUSD, timeframe, volume, eurusdSeries1,
 				strategy1, TradeType.SELL));
-//		strategyConfigs.add(new StrategyConfig("EURUSD-Vwap9EmaSell", SYMBOL_EURUSD, timeframe, volume, eurusdSeries2,
-//				strategy2, TradeType.SELL));
-//
-//		strategyConfigs.add(new StrategyConfig("GBPUSD-Vwap9EmaBuy", SYMBOL_GBPUSD, timeframe, volume, gbpusdSeries1,
-//				strategy3, TradeType.BUY));
-//		strategyConfigs.add(new StrategyConfig("GBPUSD-Vwap9EmaSell", SYMBOL_GBPUSD, timeframe, volume, gbpusdSeries2,
-//				strategy4, TradeType.SELL));
+		strategyConfigs.add(new StrategyConfig("EURUSD-Vwap9EmaSell", SYMBOL_EURUSD, timeframe, volume, eurusdSeries2,
+				strategy2, TradeType.SELL));
+
+		strategyConfigs.add(new StrategyConfig("GBPUSD-Vwap9EmaBuy", SYMBOL_GBPUSD, timeframe, volume, gbpusdSeries1,
+				strategy3, TradeType.BUY));
+		strategyConfigs.add(new StrategyConfig("GBPUSD-Vwap9EmaSell", SYMBOL_GBPUSD, timeframe, volume, gbpusdSeries2,
+				strategy4, TradeType.SELL));
 
 		for (StrategyConfig strategyConfig : strategyConfigs) {
 			Thread app = new Thread(
