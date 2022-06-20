@@ -13,13 +13,13 @@
             <useProjectArtifact>false</useProjectArtifact>
             <unpack>true</unpack>
             <scope>runtime</scope>
-            <excludes>
-              <exclude>**/Log4j2Plugins.dat</exclude>
-            </excludes>
            </dependencySet>
         </dependencySets>
         <fileSets>
           <fileSet>
+           <excludes>
+              <exclude>**/Log4j2Plugins.dat</exclude>
+            </excludes>
             <outputDirectory>/</outputDirectory>
             <directory>${project.build.outputDirectory}</directory>
           </fileSet>
