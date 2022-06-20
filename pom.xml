@@ -129,7 +129,7 @@
 	          </manifest>
 	        </archive>
 	        <descriptors>
-            <descriptor>jar-with-deps-with-exclude.xml</descriptor>
+            <descriptor>src/main/resources/jar-with-deps-with-exclude.xml</descriptor>
           </descriptors>
           <appendAssemblyId>false</appendAssemblyId>
 	      </configuration>
