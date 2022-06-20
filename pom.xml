@@ -131,6 +131,14 @@
 	        <descriptorRefs>
 	          <descriptorRef>jar-with-dependencies</descriptorRef>
 	        </descriptorRefs>
+	        <filters>
+                <filter>
+                    <artifact>*:*</artifact>
+                    <excludes>
+                        <exclude>**/Log4j2Plugins.dat</exclude>
+                    </excludes>
+                </filter>
+            </filters>
 	      </configuration>
 		</plugin>
          <plugin>
