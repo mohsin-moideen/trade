@@ -29,7 +29,7 @@ public class QuoteListener extends SynchronizationListener {
 	private FxTradingRecord tradingRecord;
 	private double triggerMultiplier;
 	private Queue<Double> prices;
-	private static final int PRICES_COUNT = 7;
+	private static final int PRICES_COUNT = 12;
 	private String threadName;
 
 	public QuoteListener(FxTradingRecord tradingRecord, String threadName) {
@@ -39,6 +39,7 @@ public class QuoteListener extends SynchronizationListener {
 		initTriggerPoints();
 		prices = new CircularFifoQueue<Double>(PRICES_COUNT);
 		this.threadName = threadName;
+		tradingRecord.setQuoteListener(this);
 
 	}
 

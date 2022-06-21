@@ -64,16 +64,14 @@ public class OrderSynchronizationListener extends SynchronizationListener {
 	@Override
 	public CompletableFuture<Void> onPositionRemoved(String instanceIndex, String positionId) {
 		Thread.currentThread().setName(threadName);
-		log.info("Position closed manually! Exiting current position");
+		log.info("Position closed manually! Exiting current position " + positionId);
 		MetatraderPosition openPosition = tradingRecord.getCurrentPosition().getMtPosition();
-		if (!openPosition.id.equals(positionId)) {
+		log.info("Position open " + JsonUtils.getString(openPosition));
+
+		if (openPosition == null || !openPosition.id.equals(positionId)) {
 			return CompletableFuture.completedFuture(null);
 		}
 		try {
-			MetatraderPosition position = MetaApiUtil.getMetaApiConnection().getPosition(positionId).get();
-			if (position != null) {
-				return CompletableFuture.completedFuture(null);
-			}
 			tradingRecord.forcedExit(series.getEndIndex(), DecimalNum.valueOf(openPosition.currentPrice), volume);
 			log.info("Current position exited!");
 			log.info("Closing price " + openPosition.currentPrice);

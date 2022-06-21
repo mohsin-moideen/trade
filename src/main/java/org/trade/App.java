@@ -105,7 +105,6 @@ public class App implements Runnable {
 				// Our strategy should exit
 				boolean exited = tradingRecord.exit(endIndex, lastClosePrice, volume);
 				if (exited) {
-					quoteListener.closeCounterTrade(); // redundancy check for closing counter trade
 					Trade exit = tradingRecord.getLastExit();
 					log.info("Exited on " + exit.getIndex() + " (price=" + exit.getNetPrice().doubleValue()
 							+ ", amount=" + exit.getAmount().doubleValue() + ")");

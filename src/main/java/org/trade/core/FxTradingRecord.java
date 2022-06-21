@@ -2,7 +2,10 @@ package org.trade.core;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jfree.util.Log;
 import org.ta4j.core.Position;
 import org.ta4j.core.Trade;
@@ -10,12 +13,18 @@ import org.ta4j.core.Trade.TradeType;
 import org.ta4j.core.TradingRecord;
 import org.ta4j.core.cost.CostModel;
 import org.ta4j.core.cost.ZeroCostModel;
+import org.ta4j.core.num.DecimalNum;
 import org.ta4j.core.num.Num;
 import org.trade.utils.TelegramUtils;
+import org.trade.utils.meta_api.MetaApiUtil;
+import org.trade.utils.meta_api.listeners.QuoteListener;
+
+import cloud.metaapi.sdk.clients.meta_api.models.MetatraderPosition;
 
 public class FxTradingRecord implements TradingRecord {
 
 	private static final long serialVersionUID = 2134401109482839832L;
+	private static final Logger log = LogManager.getLogger(FxTradingRecord.class);
 
 	/**
 	 * The name of the trading record
@@ -61,6 +70,8 @@ public class FxTradingRecord implements TradingRecord {
 	 * The current non-closed position (there's always one)
 	 */
 	private FxPosition currentPosition;
+
+	private QuoteListener quoteListener;
 
 	/**
 	 * Trading cost models
@@ -140,6 +151,14 @@ public class FxTradingRecord implements TradingRecord {
 		return currentPosition;
 	}
 
+	public QuoteListener getQuoteListener() {
+		return quoteListener;
+	}
+
+	public void setQuoteListener(QuoteListener quoteListener) {
+		this.quoteListener = quoteListener;
+	}
+
 	public void operate(int index, Num price, Num amount, Double stopLoss, Double takeProfit) {
 		if (currentPosition.isClosed()) {
 			// Current position closed, should not occur
@@ -169,12 +188,18 @@ public class FxTradingRecord implements TradingRecord {
 	}
 
 	public void forcedExit(int index, Num price, Num amount) {
+		if (quoteListener != null) {
+			quoteListener.closeCounterTrade(); // redundancy check for closing counter trade
+		}
 		Trade trade = currentPosition.forcedExit(index, price, amount);
 		recordTrade(trade, false);
 	}
 
 	@Override
 	public boolean exit(int index, Num price, Num amount) {
+		if (quoteListener != null) {
+			quoteListener.closeCounterTrade(); // redundancy check for closing counter trade
+		}
 		try {
 			if (currentPosition.isOpened() && !currentPosition.isPending()) {
 				operate(index, price, amount);
@@ -259,6 +284,26 @@ public class FxTradingRecord implements TradingRecord {
 		if (currentPosition.isClosed()) {
 			positions.add(currentPosition);
 			currentPosition = new FxPosition(startingType, transactionCostModel, holdingCostModel);
+		}
+	}
+
+	public void evaluatePositionStatus() {
+		MetatraderPosition position = null;
+		MetatraderPosition openPosition = getCurrentPosition().getMtPosition();
+		try {
+			position = MetaApiUtil.getMetaApiConnection().getPosition(openPosition.id).get(); // position
+																								// check
+		} catch (ExecutionException e) {
+			log.info("Position closed!");
+		} catch (InterruptedException e) {
+			log.error("Failed to validate poistion status! Will retry at next candle evaluation");
+		}
+		if (position != null) {
+			log.info("Position is open.");
+		} else {
+			log.info("Exiting current position !");
+			forcedExit(getLastEntry().getIndex(), DecimalNum.valueOf(openPosition.currentPrice),
+					DecimalNum.valueOf(openPosition.volume));
 		}
 	}
 
