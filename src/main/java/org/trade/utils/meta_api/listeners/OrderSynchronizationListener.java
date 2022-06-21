@@ -66,17 +66,27 @@ public class OrderSynchronizationListener extends SynchronizationListener {
 		Thread.currentThread().setName(threadName);
 		log.info("Position closed manually! Exiting current position");
 		MetatraderPosition openPosition = tradingRecord.getCurrentPosition().getMtPosition();
-		if (openPosition.id.equals(positionId)) {
-			tradingRecord.forcedExit(series.getEndIndex(), DecimalNum.valueOf(openPosition.currentPrice), volume);
+		if (!openPosition.id.equals(positionId)) {
+			return CompletableFuture.completedFuture(null);
 		}
-		log.info("Current position exited!");
-		log.info("Closing price " + openPosition.currentPrice);
-		TelegramUtils.sendMessage("Trade closed\nStrategy: " + Thread.currentThread().getName() + "\nPosition type: "
-				+ tradingRecord.getStartingType() + "\nEntry price: " + openPosition.openPrice + "\nExit price: "
-				+ openPosition.currentPrice + "\nprofit: $"
-				+ TradeUtil.getProfit(openPosition.openPrice, volume.doubleValue(), openPosition.currentPrice,
-						tradingRecord.getStartingType(), Constants.LOT_SIZE));
+		try {
+			MetatraderPosition position = MetaApiUtil.getMetaApiConnection().getPosition(positionId).get();
+			if (position != null) {
+				return CompletableFuture.completedFuture(null);
+			}
+			tradingRecord.forcedExit(series.getEndIndex(), DecimalNum.valueOf(openPosition.currentPrice), volume);
+			log.info("Current position exited!");
+			log.info("Closing price " + openPosition.currentPrice);
+			TelegramUtils.sendMessage("Trade closed\nStrategy: " + Thread.currentThread().getName()
+					+ "\nPosition type: " + tradingRecord.getStartingType() + "\nEntry price: " + openPosition.openPrice
+					+ "\nExit price: " + openPosition.currentPrice + "\nprofit: $"
+					+ TradeUtil.getProfit(openPosition.openPrice, volume.doubleValue(), openPosition.currentPrice,
+							tradingRecord.getStartingType(), Constants.LOT_SIZE));
+		} catch (Exception e) {
+			log.error("<<<<<<<<<<< FAILED TO UPDATE TRADE FOR POSITION " + positionId + " >>>>>>>>>>>>>>>>>", e);
 
+		}
 		return CompletableFuture.completedFuture(null);
+
 	}
 }

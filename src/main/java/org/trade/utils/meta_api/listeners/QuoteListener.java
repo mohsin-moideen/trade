@@ -29,7 +29,7 @@ public class QuoteListener extends SynchronizationListener {
 	private FxTradingRecord tradingRecord;
 	private double triggerMultiplier;
 	private Queue<Double> prices;
-	private static final int PRICES_COUNT = 25;
+	private static final int PRICES_COUNT = 7;
 	private String threadName;
 
 	public QuoteListener(FxTradingRecord tradingRecord, String threadName) {
@@ -119,18 +119,19 @@ public class QuoteListener extends SynchronizationListener {
 		double counterOrderProfit = TradeUtil.getProfit(counterPosition.openPrice, counterPosition.volume,
 				counterOrderPrice, actionType, Constants.LOT_SIZE);
 		log.info("counter Order  profit = " + counterOrderProfit);
-		if (counterOrderProfit < -(counterPosition.volume * 10) * 2) {
+		if (counterOrderProfit < -(counterPosition.volume * 10)) {
 			return true;
 		}
 		if (actionType == TradeType.BUY)
-			return isIncounterOrderProfitRange(counterOrderProfit) && !isBullish();
+			return isIncounterOrderProfitRange(counterPosition, counterOrderProfit) && !isBullish();
 		else
-			return isIncounterOrderProfitRange(counterOrderProfit) && isBullish();
+			return isIncounterOrderProfitRange(counterPosition, counterOrderProfit) && isBullish();
 
 	}
 
-	private boolean isIncounterOrderProfitRange(double counterOrderProfit) {
-		return counterOrderProfit >= 0 && counterOrderProfit <= 0.2 && prices.size() >= PRICES_COUNT;
+	private boolean isIncounterOrderProfitRange(MetatraderPosition counterPosition, double counterOrderProfit) {
+		return counterOrderProfit >= 0 && counterOrderProfit <= (counterPosition.volume * 2)
+				&& prices.size() >= PRICES_COUNT;
 	}
 
 	public static void main(String[] args) {
