@@ -21,7 +21,7 @@ public class Bot {
 	private static final Logger log = LogManager.getLogger(Bot.class);
 
 	public static void main(String[] args) {
-		TelegramUtils.isDisabled = true;
+		TelegramUtils.isDisabled = false;
 		final String SYMBOL_EURUSD = "EURUSD";
 		final String SYMBOL_GBPUSD = "GBPUSD";
 
