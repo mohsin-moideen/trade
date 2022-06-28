@@ -21,7 +21,7 @@ public class Bot {
 	private static final Logger log = LogManager.getLogger(Bot.class);
 
 	public static void main(String[] args) {
-		TelegramUtils.isDisabled = false;
+		TelegramUtils.isDisabled = true;
 		final String SYMBOL_EURUSD = "EURUSD";
 		final String SYMBOL_GBPUSD = "GBPUSD";
 
@@ -47,13 +47,13 @@ public class Bot {
 
 		strategyConfigs.add(new StrategyConfig("EURUSD-Vwap9EmaSell", SYMBOL_EURUSD, timeframe, volume, eurusdSeries1,
 				strategy1, TradeType.SELL));
-		strategyConfigs.add(new StrategyConfig("EURUSD-Vwap9EmaSell", SYMBOL_EURUSD, timeframe, volume, eurusdSeries2,
-				strategy2, TradeType.SELL));
+		strategyConfigs.add(new StrategyConfig("EURUSD-Vwap9EmaBuy", SYMBOL_EURUSD, timeframe, volume, eurusdSeries2,
+				strategy2, TradeType.BUY));
 
-		strategyConfigs.add(new StrategyConfig("GBPUSD-Vwap9EmaBuy", SYMBOL_GBPUSD, timeframe, volume, gbpusdSeries1,
-				strategy3, TradeType.BUY));
-		strategyConfigs.add(new StrategyConfig("GBPUSD-Vwap9EmaSell", SYMBOL_GBPUSD, timeframe, volume, gbpusdSeries2,
-				strategy4, TradeType.SELL));
+		strategyConfigs.add(new StrategyConfig("GBPUSD-Vwap9EmaSell", SYMBOL_GBPUSD, timeframe, volume, gbpusdSeries1,
+				strategy3, TradeType.SELL));
+		strategyConfigs.add(new StrategyConfig("GBPUSD-Vwap9EmaBuy", SYMBOL_GBPUSD, timeframe, volume, gbpusdSeries2,
+				strategy4, TradeType.BUY));
 
 		for (StrategyConfig strategyConfig : strategyConfigs) {
 			Thread app = new Thread(

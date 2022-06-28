@@ -40,21 +40,17 @@ public class TrendAnalysis {
 			System.out.println("is bullish");
 
 			if (recentHigh > high) {
-				System.out.println("setting higher high");
+				System.out.println("bullish setting higher high");
 
 				high = recentHigh;
-				low = recentLow;
-				recentLow = recentPrice;
 				trendStreak++;
 
 			} else if (recentLow < low) {
-				System.out.println("setting lower low");
-
+				System.out.println("bullish setting lower low");
 				setTrendReversed(PriceMovement.LowerLow);
-				low = recentLow;
-				isBullish = false;
 				high = recentHigh;
-				recentLow = recentPrice;
+				isBullish = false;
+				recentHigh = recentPrice;
 				trendStreak = 1;
 
 			}
@@ -62,19 +58,16 @@ public class TrendAnalysis {
 			System.out.println("is not bullish");
 
 			if (recentHigh > high) {
-				System.out.println("setting higher high");
+				System.out.println("bearish setting higher high");
 
 				setTrendReversed(PriceMovement.HigherHigh);
-				high = recentHigh;
 				low = recentLow;
-				recentHigh = recentPrice;
+				recentLow = recentPrice;
 				isBullish = true;
 				trendStreak = 1;
 			} else if (recentLow < low) {
-				System.out.println("setting lower low");
+				System.out.println("bearish setting lower low");
 				low = recentLow;
-				high = recentHigh;
-				recentHigh = recentPrice;
 				trendStreak++;
 			}
 		}

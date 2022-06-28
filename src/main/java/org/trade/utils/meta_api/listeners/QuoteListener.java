@@ -24,7 +24,7 @@ public class QuoteListener extends SynchronizationListener {
 	private TradeType tradeType;
 	private MetatraderPosition counterPosition;
 	private FxTradingRecord tradingRecord;
-	private static final double triggerMultiplier = 3;
+	private static final double triggerMultiplier = 2;
 	private static final int PRICES_COUNT = 8;
 	private String threadName;
 	private TrendAnalysis trendAnalysis;
@@ -128,10 +128,7 @@ public class QuoteListener extends SynchronizationListener {
 		if (counterOrderProfit <= 0) {
 			return true;
 		}
-		if (trendAnalysis.isTrendReversed()) {
-			return true;
-		}
-		return !isTrendAligned(counterOrderType);
+		return !isTrendAligned(counterOrderType) && trendAnalysis.getTrendStrength() >= .025;
 
 	}
 
