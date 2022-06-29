@@ -74,20 +74,19 @@ public class Strategies {
 
 	// Created to simplify backtesting
 	public static Strategy getVwap9EmaSellStrategy(BarSeries series, List<Num> params) {
-		validateParamCount(params, 3);
-		return getVwap9EmaSellStrategy(series, params.get(0), params.get(1), params.get(2));
+		validateParamCount(params, 2);
+		return getVwap9EmaSellStrategy(series, params.get(0), params.get(1));
 	}
 
-	public static Strategy getVwap9EmaSellStrategy(BarSeries series, Num vwapIndicatorLength, Num stopGainPercentage,
-			Num stopLossPercentage) {
+	public static Strategy getVwap9EmaSellStrategy(BarSeries series, Num stopGainPercentage, Num stopLossPercentage) {
 		validate(series);
 		ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
-		VWAPIndicator vwapIndicator = new VWAPIndicator(series, vwapIndicatorLength.intValue());
+		VWAPIndicator vwapIndicator = new VWAPIndicator(series, 8);
 		EMAIndicator emaIndicator = new EMAIndicator(closePrice, 9);
-		Rule entryRule = new CrossedUpIndicatorRule(emaIndicator, vwapIndicator);
+		Rule entryRule = new CrossedDownIndicatorRule(emaIndicator, vwapIndicator);
 		Rule exitRule = new StopGainRule(closePrice, stopGainPercentage)
 				.or(new StopLossRule(closePrice, stopLossPercentage))
-				.or(new CrossedDownIndicatorRule(emaIndicator, vwapIndicator));
+				.or(new CrossedUpIndicatorRule(emaIndicator, vwapIndicator));
 		FxStrategy strategy = new FxStrategy(entryRule, exitRule, stopLossPercentage.doubleValue(),
 				stopGainPercentage.doubleValue());
 		return strategy;
@@ -95,20 +94,19 @@ public class Strategies {
 
 	// Created to simplify backtesting
 	public static Strategy getVwap9EmaBuyStrategy(BarSeries series, List<Num> params) {
-		validateParamCount(params, 3);
-		return getVwap9EmaBuyStrategy(series, params.get(0), params.get(1), params.get(2));
+		validateParamCount(params, 2);
+		return getVwap9EmaBuyStrategy(series, params.get(0), params.get(1));
 	}
 
-	public static Strategy getVwap9EmaBuyStrategy(BarSeries series, Num vwapIndicatorLength, Num stopGainPercentage,
-			Num stopLossPercentage) {
+	public static Strategy getVwap9EmaBuyStrategy(BarSeries series, Num stopGainPercentage, Num stopLossPercentage) {
 		validate(series);
 		ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
-		VWAPIndicator vwapIndicator = new VWAPIndicator(series, vwapIndicatorLength.intValue());
+		VWAPIndicator vwapIndicator = new VWAPIndicator(series, 8);
 		EMAIndicator emaIndicator = new EMAIndicator(closePrice, 9);
-		Rule entryRule = new CrossedDownIndicatorRule(emaIndicator, vwapIndicator);
+		Rule entryRule = new CrossedUpIndicatorRule(emaIndicator, vwapIndicator);
 		Rule exitRule = new StopGainRule(closePrice, stopGainPercentage)
 				.or(new StopLossRule(closePrice, stopLossPercentage))
-				.or(new CrossedUpIndicatorRule(emaIndicator, vwapIndicator));
+				.or(new CrossedDownIndicatorRule(emaIndicator, vwapIndicator));
 		FxStrategy strategy = new FxStrategy(entryRule, exitRule, stopLossPercentage.doubleValue(),
 				stopGainPercentage.doubleValue());
 		return strategy;
@@ -129,18 +127,18 @@ public class Strategies {
 
 	// Created to simplify backtesting
 	public static Strategy getMacdRsiBuyStrategy(BarSeries series, List<Num> params) {
-		if (params.size() != 2) {
+		if (params.size() != 1) {
 			log.error("Invalid number of parameters!");
 			return null;
 		}
-		return getMacdRsiBuyStrategy(series, params.get(0), params.get(1));
+		return getMacdRsiBuyStrategy(series, params.get(0));
 	}
 
-	public static Strategy getMacdRsiBuyStrategy(BarSeries series, Num rsiIndicatorBarCount, Num stopGainPercentage) {
+	public static Strategy getMacdRsiBuyStrategy(BarSeries series, Num stopGainPercentage) {
 		validate(series);
 		ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
 		MACDIndicator macdIndicator = new MACDIndicator(closePrice, 12, 26);
-		RSIIndicator rsiIndicator = new RSIIndicator(closePrice, rsiIndicatorBarCount.intValue());
+		RSIIndicator rsiIndicator = new RSIIndicator(closePrice, 14);
 		Rule entryRule = new CrossedUpIndicatorRule(macdIndicator.getShortTermEma(), macdIndicator.getLongTermEma())
 				.and(new CrossedUpIndicatorRule(rsiIndicator, 30));
 		Rule exitRule = new StopGainRule(closePrice, stopGainPercentage);

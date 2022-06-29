@@ -11,7 +11,7 @@ public enum TimePeriod {
 		case one_month:
 			return 30 * minutesInADay;
 		case one_week:
-			return 70 * minutesInADay;
+			return 7 * minutesInADay;
 		case one_year:
 			return 365 * minutesInADay;
 		case six_months:
