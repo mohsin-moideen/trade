@@ -50,7 +50,7 @@ public class App implements Runnable {
 	private void updateSeries() {
 		Candle candle = MarketDataUtil.getCurrentCandle(symbol, timeframe);
 		// null check for candle - happens when meta api is down!!
-		if (candle == null) {
+		if (candle == null || candle.getTime() == null) {
 			log.error("Failed to fetch candle data from Meta api./n Exiting all trades!");
 			TelegramUtils.sendMessage("⚠️⚠️⚠️⚠️⚠️  Failed to fetch candle data from Meta api. ⚠️⚠️⚠️⚠️⚠️");
 			TelegramUtils.sendMessage("⚠️⚠️⚠️⚠️⚠️ Please ensure Meta api server is running ⚠️⚠️⚠️⚠️⚠️");
