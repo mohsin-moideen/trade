@@ -18,12 +18,14 @@ import org.ta4j.core.indicators.adx.ADXIndicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.indicators.volume.VWAPIndicator;
 import org.ta4j.core.num.Num;
+import org.ta4j.core.rules.ChainRule;
 import org.ta4j.core.rules.CrossedDownIndicatorRule;
 import org.ta4j.core.rules.CrossedUpIndicatorRule;
 import org.ta4j.core.rules.OverIndicatorRule;
 import org.ta4j.core.rules.StopGainRule;
 import org.ta4j.core.rules.StopLossRule;
 import org.ta4j.core.rules.UnderIndicatorRule;
+import org.ta4j.core.rules.helper.ChainLink;
 
 public class Strategies {
 	private static final Logger log = LogManager.getLogger(Strategies.class);
@@ -127,34 +129,41 @@ public class Strategies {
 
 	// Created to simplify backtesting
 	public static Strategy getMacdRsiBuyStrategy(BarSeries series, List<Num> params) {
-		if (params.size() != 1) {
-			log.error("Invalid number of parameters!");
-			return null;
-		}
-		return getMacdRsiBuyStrategy(series, params.get(0));
+		validateParamCount(params, 3);
+		return getMacdRsiBuyStrategy(series, params.get(0), params.get(1), params.get(2));
 	}
 
-	public static Strategy getMacdRsiBuyStrategy(BarSeries series, Num stopGainPercentage) {
+	public static Strategy getMacdRsiBuyStrategy(BarSeries series, Num stopGainPercentage, Num stopLossPercentage,
+			Num rsiThreshold) {
 		validate(series);
 		ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
 		MACDIndicator macdIndicator = new MACDIndicator(closePrice, 12, 26);
 		RSIIndicator rsiIndicator = new RSIIndicator(closePrice, 14);
-		Rule entryRule = new CrossedUpIndicatorRule(macdIndicator.getShortTermEma(), macdIndicator.getLongTermEma())
-				.and(new CrossedUpIndicatorRule(rsiIndicator, 30));
-		Rule exitRule = new StopGainRule(closePrice, stopGainPercentage);
+		Rule entryRule = new ChainRule(new CrossedUpIndicatorRule(rsiIndicator, rsiThreshold), new ChainLink(
+				new CrossedUpIndicatorRule(macdIndicator.getShortTermEma(), macdIndicator.getLongTermEma()), 0));
+		Rule exitRule = new StopGainRule(closePrice, stopGainPercentage)
+				.or(new StopLossRule(closePrice, stopLossPercentage));
 		FxStrategy strategy = new FxStrategy(entryRule, exitRule, null, stopGainPercentage.doubleValue());
 		return strategy;
 	}
 
-	public static Strategy getMacdRsiSellStrategy(BarSeries series) {
+	// Created to simplify backtesting
+	public static Strategy getMacdRsiSellStrategy(BarSeries series, List<Num> params) {
+		validateParamCount(params, 3);
+		return getMacdRsiBuyStrategy(series, params.get(0), params.get(1), params.get(2));
+	}
+
+	public static Strategy getMacdRsiSellStrategy(BarSeries series, Num stopGainPercentage, Num stopLossPercentage,
+			Num rsiThreshold) {
 		validate(series);
 		ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
 		MACDIndicator macdIndicator = new MACDIndicator(closePrice, 12, 26);
 		RSIIndicator rsiIndicator = new RSIIndicator(closePrice, 14);
-		Rule entry = new CrossedDownIndicatorRule(macdIndicator.getShortTermEma(), macdIndicator.getLongTermEma())
-				.and(new CrossedDownIndicatorRule(rsiIndicator, 70));
-		Rule exit = new StopGainRule(closePrice, .15);
-		Strategy strategy = new BaseStrategy(entry, exit);
+		Rule entryRule = new ChainRule(new CrossedDownIndicatorRule(rsiIndicator, rsiThreshold), new ChainLink(
+				new CrossedDownIndicatorRule(macdIndicator.getShortTermEma(), macdIndicator.getLongTermEma()), 0));
+		Rule exitRule = new StopGainRule(closePrice, stopGainPercentage)
+				.or(new StopLossRule(closePrice, stopLossPercentage));
+		FxStrategy strategy = new FxStrategy(entryRule, exitRule, null, stopGainPercentage.doubleValue());
 		return strategy;
 	}
 

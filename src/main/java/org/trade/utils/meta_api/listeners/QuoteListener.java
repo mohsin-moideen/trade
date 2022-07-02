@@ -107,7 +107,6 @@ public class QuoteListener extends SynchronizationListener {
 	private void resetTrend() {
 		priceTicker = 0;
 		trendAnalysis = new TrendAnalysis();
-		System.gc();
 	}
 
 	private boolean shouldOpenCounterTrade(MetatraderPosition openPosition, double currentProfit,

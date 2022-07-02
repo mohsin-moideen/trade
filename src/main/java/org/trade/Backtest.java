@@ -63,25 +63,25 @@ public class Backtest {
 
 	public static void main(String[] args) throws IOException {
 		// Step 1: Change strategy name
-		final String strategyName = "getVwap9EmaBuyStrategy";
+		final String strategyName = "getMacdRsiBuyStrategy";
 		final String fileName = REPORT_BASE_PATH + strategyName + "-"
 				+ new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date()) + ".csv";
 		log.info("Results will be saved to " + fileName);
 		csvWriter = new CSVWriter(new FileWriter(fileName, true));
 		// Step 2: Set currency pairs
-		List<String> currencyPairs = new LinkedList<>(Arrays.asList(new String[] { "EURUSD", "GBPUSD" }));
+		List<String> currencyPairs = new LinkedList<>(Arrays.asList(new String[] { "AUDUSD" }));
 		// Step 3: Set time frames
 		List<Timeframe> timeFrames = new LinkedList<>(
-				Arrays.asList(new Timeframe[] { Timeframe.fifteen_min, Timeframe.five_min }));
-		Map<String, BarSeries> series = initSeries(currencyPairs, timeFrames, TimePeriod.one_day);
+				Arrays.asList(new Timeframe[] { Timeframe.five_min, Timeframe.fifteen_min }));
+		Map<String, BarSeries> series = initSeries(currencyPairs, timeFrames, TimePeriod.one_week);
 		List<StrategyParamsConfig> paramConfigs = new LinkedList<>();
 		// Step 4: Create parameters required
 		StrategyParamsConfig stopGainPercentage = new StrategyParamsConfig("stopGainPercentage",
-				DecimalNum.valueOf(.01), DecimalNum.valueOf(.2), DecimalNum.valueOf(.01));
-		StrategyParamsConfig stopLossPercentage = new StrategyParamsConfig("stopLossPercentage",
 				DecimalNum.valueOf(.01), DecimalNum.valueOf(.1), DecimalNum.valueOf(.01));
-		StrategyParamsConfig rsiIndicatorLength = new StrategyParamsConfig("rsiIndicatorLength", DecimalNum.valueOf(2),
-				DecimalNum.valueOf(3), DecimalNum.valueOf(1));
+		StrategyParamsConfig stopLossPercentage = new StrategyParamsConfig("stopLossPercentage",
+				DecimalNum.valueOf(.01), DecimalNum.valueOf(.05), DecimalNum.valueOf(.01));
+		StrategyParamsConfig rsiThreshold = new StrategyParamsConfig("rsiIndicatorLength", DecimalNum.valueOf(30),
+				DecimalNum.valueOf(80), DecimalNum.valueOf(5));
 		StrategyParamsConfig adxIndicatorLength = new StrategyParamsConfig("adxIndicatorLength", DecimalNum.valueOf(3),
 				DecimalNum.valueOf(6), DecimalNum.valueOf(1));
 		StrategyParamsConfig emaIndicatorLength = new StrategyParamsConfig("emaIndicatorLength", DecimalNum.valueOf(45),
@@ -89,11 +89,12 @@ public class Backtest {
 
 		// Step 5: Add created parameters to list. Please ensure the order matches the
 		// parameters accepted by the get strategy method
-//		paramConfigs.add(rsiIndicatorLength);
 //		paramConfigs.add(adxIndicatorLength);
 //		paramConfigs.add(emaIndicatorLength);
 		paramConfigs.add(stopGainPercentage);
 		paramConfigs.add(stopLossPercentage);
+		paramConfigs.add(rsiThreshold);
+
 		writeCsvHeaders(paramConfigs);
 		StrategyParamsConfig lastParam = paramConfigs.get(paramConfigs.size() - 1);
 		totalPieces = currencyPairs.size() * timeFrames.size()
@@ -129,7 +130,7 @@ public class Backtest {
 				BarSeriesManager seriesManager = new BarSeriesManager(barSeries);
 				Collections.reverse(params);
 				// Step 6: Change function call. You're set!
-				Strategy strategy = Strategies.getVwap9EmaBuyStrategy(barSeries, params);
+				Strategy strategy = Strategies.getMacdRsiBuyStrategy(barSeries, params);
 				TradingRecord tradingRecordBuy = seriesManager.run(strategy, TradeType.BUY,
 						DecimalNum.valueOf(volume * lotSize));
 				TradingRecord tradingRecordSell = seriesManager.run(strategy, TradeType.SELL,
