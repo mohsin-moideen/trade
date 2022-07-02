@@ -89,23 +89,16 @@ public class App implements Runnable {
 
 		while (running) {
 			synchronized (pauseLock) {
-				if (!running) { // may have changed while waiting to
-					// synchronize on pauseLock
+				if (!running) {
 					break;
 				}
 				if (paused) {
 					try {
-						pauseLock.wait(); // will cause this Thread to block until
-						// another thread calls pauseLock.notifyAll()
-						// Note that calling wait() will
-						// relinquish the synchronized lock that this
-						// thread holds on pauseLock so another thread
-						// can acquire the lock to call notifyAll()
-						// (link with explanation below this code)
+						pauseLock.wait();
 					} catch (InterruptedException ex) {
 						break;
 					}
-					if (!running) { // running might have changed since we paused
+					if (!running) {
 						break;
 					}
 				}
@@ -159,7 +152,6 @@ public class App implements Runnable {
 	}
 
 	public void pause() {
-		// you may want to throw an IllegalStateException if !running
 		paused = true;
 	}
 
