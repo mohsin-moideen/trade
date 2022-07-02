@@ -82,15 +82,9 @@ public class Backtest {
 				DecimalNum.valueOf(.01), DecimalNum.valueOf(.05), DecimalNum.valueOf(.01));
 		StrategyParamsConfig rsiThreshold = new StrategyParamsConfig("rsiIndicatorLength", DecimalNum.valueOf(30),
 				DecimalNum.valueOf(80), DecimalNum.valueOf(5));
-		StrategyParamsConfig adxIndicatorLength = new StrategyParamsConfig("adxIndicatorLength", DecimalNum.valueOf(3),
-				DecimalNum.valueOf(6), DecimalNum.valueOf(1));
-		StrategyParamsConfig emaIndicatorLength = new StrategyParamsConfig("emaIndicatorLength", DecimalNum.valueOf(45),
-				DecimalNum.valueOf(55), DecimalNum.valueOf(1));
 
 		// Step 5: Add created parameters to list. Please ensure the order matches the
 		// parameters accepted by the get strategy method
-//		paramConfigs.add(adxIndicatorLength);
-//		paramConfigs.add(emaIndicatorLength);
 		paramConfigs.add(stopGainPercentage);
 		paramConfigs.add(stopLossPercentage);
 		paramConfigs.add(rsiThreshold);
