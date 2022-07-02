@@ -26,6 +26,9 @@ import org.trade.utils.meta_api.listeners.QuoteListener;
 public class App implements Runnable {
 
 	private static final Logger log = LogManager.getLogger(App.class);
+	private volatile boolean running = true;
+	private volatile boolean paused = false;
+	private final Object pauseLock = new Object();
 
 	private String symbol;
 	private Timeframe timeframe;
@@ -84,7 +87,29 @@ public class App implements Runnable {
 
 		log.info("Initialization complete");
 
-		while (true) {
+		while (running) {
+			synchronized (pauseLock) {
+				if (!running) { // may have changed while waiting to
+					// synchronize on pauseLock
+					break;
+				}
+				if (paused) {
+					try {
+						pauseLock.wait(); // will cause this Thread to block until
+						// another thread calls pauseLock.notifyAll()
+						// Note that calling wait() will
+						// relinquish the synchronized lock that this
+						// thread holds on pauseLock so another thread
+						// can acquire the lock to call notifyAll()
+						// (link with explanation below this code)
+					} catch (InterruptedException ex) {
+						break;
+					}
+					if (!running) { // running might have changed since we paused
+						break;
+					}
+				}
+			}
 			updateSeries();
 			Num lastClosePrice = series.getLastBar().getClosePrice();
 			log.info("Bar added, close price = " + lastClosePrice);
@@ -122,6 +147,26 @@ public class App implements Runnable {
 			} catch (InterruptedException e) {
 				log.error(e.getMessage(), e);
 			}
+		}
+	}
+
+	public void stop() {
+		running = false;
+		// you might also want to interrupt() the Thread that is
+		// running this Runnable, too, or perhaps call:
+		resume();
+		// to unblock
+	}
+
+	public void pause() {
+		// you may want to throw an IllegalStateException if !running
+		paused = true;
+	}
+
+	public void resume() {
+		synchronized (pauseLock) {
+			paused = false;
+			pauseLock.notifyAll(); // Unblocks thread
 		}
 	}
 

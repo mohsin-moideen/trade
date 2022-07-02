@@ -2,6 +2,7 @@ package org.trade.config;
 
 public class Constants {
 
+	// TODO: Move these to param store
 	public static String META_API_ACCOUNT_ID = "911d4ed9-f215-4cd9-8e51-b601a197acc6";
 	public static String META_API_API_KEY = "eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiJmNzU2ZjhiMzEzNmZjNzdiMWVjZDNkOGM1MzUxNTM1OCIsInBlc"
 			+ "m1pc3Npb25zIjpbXSwidG9rZW5JZCI6IjIwMjEwMjEzIiwiaWF0IjoxNjUxOTQzMDAwLCJyZWFsVXNlcklkIjoiZjc1NmY4YjMxMzZmYzc3YjFlY2QzZDhjNTM1MTUzNT"

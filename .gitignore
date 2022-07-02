@@ -2,3 +2,5 @@
 .metaapi/*.bin
 .settings/org.eclipse.jdt.core.prefs
 logs/
+.settings/org.eclipse.jdt.core.prefs
+.classpath
