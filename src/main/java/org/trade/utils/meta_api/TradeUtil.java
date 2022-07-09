@@ -5,8 +5,10 @@ import java.util.concurrent.ExecutionException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ta4j.core.Trade.TradeType;
+import org.trade.config.Constants;
 import org.trade.utils.JsonUtils;
 import org.trade.utils.meta_api.beans.TradeRequest;
+import org.trade.utils.meta_api.listeners.QuoteListener;
 
 import cloud.metaapi.sdk.clients.meta_api.TradeException;
 import cloud.metaapi.sdk.clients.meta_api.models.MetatraderTradeResponse;
@@ -77,12 +79,18 @@ public class TradeUtil {
 		return Math.round(number * equilizer) / equilizer;
 	}
 
-	public static double getProfit(Double openPrice, Double volume, Double currentPrice, TradeType tradeType,
-			int LOT_SIZE) {
+	public static double getProfit(Double openPrice, Double volume, Double currentPrice, TradeType tradeType) {
+		Double tickSize = Constants.symbolSpec.tickSize;
+		Double profit = 0.0;
+		Double tickValue = tradeType == TradeType.BUY && currentPrice > openPrice
+				|| tradeType == TradeType.SELL && currentPrice < openPrice ? QuoteListener.price.profitTickValue
+						: QuoteListener.price.lossTickValue;
+
+		roundOff((currentPrice - openPrice) * (volume * tickValue / tickSize), 2);
 		if (tradeType == TradeType.BUY)
-			return roundOff((currentPrice - openPrice) * (volume * LOT_SIZE), 2);
+			return profit;
 		else
-			return roundOff((openPrice - currentPrice) * (volume * LOT_SIZE), 2);
+			return -1 * profit;
 	}
 
 	public static void main(String[] args) {

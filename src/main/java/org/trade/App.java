@@ -79,7 +79,7 @@ public class App implements Runnable {
 		MetaApiUtil.initMetaApi();
 
 		FxTradingRecord tradingRecord = new FxTradingRecord(symbol, tradeType);
-
+		Constants.symbolSpec = MetaApiUtil.getMetaApiConnection().getSymbolSpecification(symbol).join();
 		MetaApiUtil.getMetaApiConnection().addSynchronizationListener(
 				new OrderSynchronizationListener(series, volume, tradingRecord, Thread.currentThread().getName()));
 		QuoteListener quoteListener = new QuoteListener(tradingRecord, Thread.currentThread().getName());
@@ -131,7 +131,7 @@ public class App implements Runnable {
 							+ exit.getNetPrice().doubleValue() + "\nProfit: $"
 							+ TradeUtil.getProfit(tradingRecord.getLastEntry().getNetPrice().doubleValue(),
 									volume.doubleValue(), exit.getNetPrice().doubleValue(),
-									tradingRecord.getStartingType(), Constants.LOT_SIZE));
+									tradingRecord.getStartingType()));
 				}
 			}
 			try {

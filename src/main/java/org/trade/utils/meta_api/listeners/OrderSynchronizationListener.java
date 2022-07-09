@@ -7,7 +7,6 @@ import org.apache.logging.log4j.Logger;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.num.DecimalNum;
 import org.ta4j.core.num.Num;
-import org.trade.config.Constants;
 import org.trade.core.FxTradingRecord;
 import org.trade.utils.JsonUtils;
 import org.trade.utils.TelegramUtils;
@@ -79,7 +78,7 @@ public class OrderSynchronizationListener extends SynchronizationListener {
 					+ "\nPosition type: " + tradingRecord.getStartingType() + "\nEntry price: " + openPosition.openPrice
 					+ "\nExit price: " + openPosition.currentPrice + "\nprofit: $"
 					+ TradeUtil.getProfit(openPosition.openPrice, volume.doubleValue(), openPosition.currentPrice,
-							tradingRecord.getStartingType(), Constants.LOT_SIZE));
+							tradingRecord.getStartingType()));
 		} catch (Exception e) {
 			log.error("<<<<<<<<<<< FAILED TO UPDATE TRADE FOR POSITION " + positionId + " >>>>>>>>>>>>>>>>>", e);
 

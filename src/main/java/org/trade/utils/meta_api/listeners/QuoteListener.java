@@ -5,7 +5,6 @@ import java.util.concurrent.CompletableFuture;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.ta4j.core.Trade.TradeType;
-import org.trade.config.Constants;
 import org.trade.core.FxTradingRecord;
 import org.trade.utils.JsonUtils;
 import org.trade.utils.TelegramUtils;
@@ -20,6 +19,9 @@ import cloud.metaapi.sdk.clients.meta_api.models.MetatraderSymbolPrice;
 import cloud.metaapi.sdk.clients.meta_api.models.MetatraderTradeResponse;
 
 public class QuoteListener extends SynchronizationListener {
+
+	// Global - please do not set anywhere else!
+	public static MetatraderSymbolPrice price;
 
 	private TradeType tradeType;
 	private MetatraderPosition counterPosition;
@@ -43,31 +45,32 @@ public class QuoteListener extends SynchronizationListener {
 	private static final Logger log = LogManager.getLogger(QuoteListener.class);
 
 	@Override
-	public CompletableFuture<Void> onSymbolPriceUpdated(String instanceIndex, MetatraderSymbolPrice price) {
+	public CompletableFuture<Void> onSymbolPriceUpdated(String instanceIndex, MetatraderSymbolPrice symbolPrice) {
 		MetatraderPosition openPosition = tradingRecord.getCurrentPosition().getMtPosition();
-		if (openPosition == null || !price.symbol.equals(openPosition.symbol)) // symbol check for redundancy
+		if (openPosition == null || !symbolPrice.symbol.equals(openPosition.symbol)) // symbol check for redundancy
 			return CompletableFuture.completedFuture(null);
 		Thread.currentThread().setName(threadName);
-		log.debug(price.symbol + " price updated " + JsonUtils.getString(price));
+		log.debug(symbolPrice.symbol + " price updated " + JsonUtils.getString(symbolPrice));
 		Double currentPrice;
 		Double counterOrderPrice;
 		TradeType actionType;
 		if (tradeType == TradeType.BUY) {
-			currentPrice = price.bid;
-			counterOrderPrice = price.ask;
+			currentPrice = symbolPrice.bid;
+			counterOrderPrice = symbolPrice.ask;
 			actionType = TradeType.SELL;
 		} else {
-			currentPrice = price.ask;
-			counterOrderPrice = price.bid;
+			currentPrice = symbolPrice.ask;
+			counterOrderPrice = symbolPrice.bid;
 			actionType = TradeType.BUY;
 		}
+		price = symbolPrice;
 		openPosition.currentPrice = currentPrice;
 		trendAnalysis.updateTrend(currentPrice);
 		log.debug("currentPrice = " + currentPrice);
 		log.debug("openPosition.openPrice = " + openPosition.openPrice);
 		log.debug("openPosition.volume = " + openPosition.volume);
-		double currentProfit = TradeUtil.getProfit(openPosition.openPrice, openPosition.volume, currentPrice, tradeType,
-				Constants.LOT_SIZE);
+		double currentProfit = TradeUtil.getProfit(openPosition.openPrice, openPosition.volume, currentPrice,
+				tradeType);
 		currentProfit = TradeUtil.roundOff(currentProfit, 2);
 
 		log.info("current profit = " + currentProfit);
@@ -120,7 +123,7 @@ public class QuoteListener extends SynchronizationListener {
 	private boolean shouldCloseCounterTrade(MetatraderPosition counterPosition, TradeType counterOrderType,
 			double counterOrderPrice) {
 		double counterOrderProfit = TradeUtil.getProfit(counterPosition.openPrice, counterPosition.volume,
-				counterOrderPrice, counterOrderType, Constants.LOT_SIZE);
+				counterOrderPrice, counterOrderType);
 		log.info("counter Order  profit = " + counterOrderProfit);
 		if (priceTicker < PRICES_COUNT) {
 			return false;
@@ -128,7 +131,7 @@ public class QuoteListener extends SynchronizationListener {
 //		if (counterOrderProfit <= -(counterPosition.volume * 20)) {
 //			return true;
 //		}
-		return !isTrendAligned(counterOrderType);
+		return !isTrendAligned(counterOrderType) && counterOrderProfit >= 0 && trendAnalysis.getTrendStrength() > 0.08;
 
 	}
 
@@ -161,7 +164,7 @@ public class QuoteListener extends SynchronizationListener {
 					+ "\nPosition type: " + tradeType.complementType() + "\nEntry price: " + counterPosition.openPrice
 					+ "\nExit price: " + counterPosition.currentPrice + "\nCounter trade profit: $"
 					+ TradeUtil.getProfit(counterPosition.openPrice, counterPosition.volume,
-							counterPosition.currentPrice, tradeType.complementType(), Constants.LOT_SIZE));
+							counterPosition.currentPrice, tradeType.complementType()));
 			counterPosition = null; // clearing counter position to open if price falls
 		}
 		return false;

@@ -28,26 +28,28 @@ public class Bot {
 
 	public static void main(String[] args) {
 		Map<String, App> apps = new HashMap<>();
-		TelegramUtils.isDisabled = false;
+		TelegramUtils.isDisabled = true;
 		final String SYMBOL_EURUSD = "EURUSD";
 		final String SYMBOL_GBPUSD = "GBPUSD";
+		final String SYMBOL_EURJPY = "EURJPY";
+		final String SYMBOL_AUDNZD = "AUDNZD";
 
-		final Timeframe timeframe = Timeframe.five_min;
+		final Timeframe timeframe = Timeframe.one_min;
 		final Num volume = DecimalNum.valueOf(0.2);
 
-//		BarSeries eurusdSeries1 = SeriesUtil.initMovingBarSeries(SYMBOL_EURUSD, timeframe, 500);
+		BarSeries eurjpySeries1 = SeriesUtil.initMovingBarSeries(SYMBOL_EURJPY, timeframe, 500);
 //		BarSeries eurusdSeries2 = SeriesUtil.initMovingBarSeries(SYMBOL_EURUSD, timeframe, 500);
 //		Strategy strategy1 = Strategies.getVwap9EmaSellStrategy(eurusdSeries1, DecimalNum.valueOf(0.2),
 //				DecimalNum.valueOf(0.09));
 //		Strategy strategy2 = Strategies.getVwap9EmaBuyStrategy(eurusdSeries2, DecimalNum.valueOf(0.2),
 //				DecimalNum.valueOf(0.09));
 //
-		BarSeries gbpusdSeries1 = SeriesUtil.initMovingBarSeries(SYMBOL_GBPUSD, timeframe, 500);
-		BarSeries gbpusdSeries2 = SeriesUtil.initMovingBarSeries(SYMBOL_GBPUSD, timeframe, 500);
-		Strategy strategy3 = Strategies.getVwap9EmaSellStrategy(gbpusdSeries1, DecimalNum.valueOf(0.2),
+//		BarSeries gbpusdSeries1 = SeriesUtil.initMovingBarSeries(SYMBOL_GBPUSD, timeframe, 500);
+//		BarSeries gbpusdSeries2 = SeriesUtil.initMovingBarSeries(SYMBOL_GBPUSD, timeframe, 500);
+		Strategy strategy3 = Strategies.getVwap9EmaSellStrategy(eurjpySeries1, DecimalNum.valueOf(0.02),
 				DecimalNum.valueOf(0.09));
-		Strategy strategy4 = Strategies.getVwap9EmaBuyStrategy(gbpusdSeries2, DecimalNum.valueOf(0.07),
-				DecimalNum.valueOf(0.09));
+//		Strategy strategy4 = Strategies.getVwap9EmaBuyStrategy(gbpusdSeries2, DecimalNum.valueOf(0.07),
+//				DecimalNum.valueOf(0.09));
 
 		List<StrategyConfig> strategyConfigs = new LinkedList<>();
 
@@ -56,10 +58,10 @@ public class Bot {
 //		strategyConfigs.add(new StrategyConfig("EURUSD-Vwap9EmaBuy", SYMBOL_EURUSD, timeframe, volume, eurusdSeries2,
 //				strategy2, TradeType.BUY));
 //
-		strategyConfigs.add(new StrategyConfig("GBPUSD-Vwap9EmaSell", SYMBOL_GBPUSD, timeframe, volume, gbpusdSeries1,
-				strategy3, TradeType.SELL));
-		strategyConfigs.add(new StrategyConfig("GBPUSD-Vwap9EmaSell", SYMBOL_GBPUSD, timeframe, volume, gbpusdSeries2,
-				strategy4, TradeType.SELL));
+		strategyConfigs.add(new StrategyConfig("SYMBOL_EURJPY-Vwap9EmaSell", SYMBOL_EURJPY, timeframe, volume,
+				eurjpySeries1, strategy3, TradeType.BUY));
+//		strategyConfigs.add(new StrategyConfig("GBPUSD-Vwap9EmaSell", SYMBOL_GBPUSD, timeframe, volume, gbpusdSeries2,
+//				strategy4, TradeType.BUY));
 
 		for (StrategyConfig strategyConfig : strategyConfigs) {
 			App app = new App(strategyConfig.getSymbol(), strategyConfig.getTimeframe(), strategyConfig.getVolume(),

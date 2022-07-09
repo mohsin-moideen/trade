@@ -1,5 +1,7 @@
 package org.trade.config;
 
+import cloud.metaapi.sdk.clients.meta_api.models.MetatraderSymbolSpecification;
+
 public class Constants {
 
 	// TODO: Move these to param store
@@ -25,5 +27,6 @@ public class Constants {
 			+ "/trade";
 
 	public static int LOT_SIZE = 100000; // TODO: get from meta api for other pairs
+	public static MetatraderSymbolSpecification symbolSpec = null;
 
 }
