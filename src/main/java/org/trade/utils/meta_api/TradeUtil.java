@@ -11,6 +11,7 @@ import org.trade.utils.meta_api.beans.TradeRequest;
 import org.trade.utils.meta_api.listeners.QuoteListener;
 
 import cloud.metaapi.sdk.clients.meta_api.TradeException;
+import cloud.metaapi.sdk.clients.meta_api.models.MetatraderSymbolPrice;
 import cloud.metaapi.sdk.clients.meta_api.models.MetatraderTradeResponse;
 import cloud.metaapi.sdk.clients.meta_api.models.StopOptions;
 import cloud.metaapi.sdk.clients.meta_api.models.StopOptions.StopUnits;
@@ -82,15 +83,33 @@ public class TradeUtil {
 	public static double getProfit(Double openPrice, Double volume, Double currentPrice, TradeType tradeType) {
 		Double tickSize = Constants.symbolSpec.tickSize;
 		Double profit = 0.0;
+		MetatraderSymbolPrice price = QuoteListener.getPrice();
 		Double tickValue = tradeType == TradeType.BUY && currentPrice > openPrice
-				|| tradeType == TradeType.SELL && currentPrice < openPrice ? QuoteListener.price.profitTickValue
-						: QuoteListener.price.lossTickValue;
-
-		roundOff((currentPrice - openPrice) * (volume * tickValue / tickSize), 2);
+				|| tradeType == TradeType.SELL && currentPrice < openPrice ? price.profitTickValue
+						: price.lossTickValue;
+		profit = roundOff((currentPrice - openPrice) * (volume * tickValue / tickSize), 2);
 		if (tradeType == TradeType.BUY)
 			return profit;
 		else
 			return -1 * profit;
+	}
+
+	public static Double getCurrentBuyPrice(TradeType tradeType) {
+		MetatraderSymbolPrice price = QuoteListener.getPrice();
+		while (price == null) {
+			log.info("price is null. waiting");
+			try {
+				Thread.sleep(500);
+				price = QuoteListener.getPrice();
+			} catch (InterruptedException e) {
+				log.error("Failed to wait until price is reterived", e);
+			}
+		}
+		if (tradeType == TradeType.BUY) {
+			return price.ask;
+		} else {
+			return price.bid;
+		}
 	}
 
 	public static void main(String[] args) {

@@ -129,8 +129,7 @@ public class FxPosition extends Position {
 		if (isNew()) {
 			// redundant check to prevent multiple open orders on same entry. do not remove!
 			if (mtOrderId == null && mtPosition == null) {
-				MetatraderTradeResponse tradeOrder = executeTrade(startingType, price, amount, symbol, stopLoss,
-						takeProfit);
+				MetatraderTradeResponse tradeOrder = executeTrade(startingType, amount, symbol, stopLoss, takeProfit);
 				if (tradeOrder != null && mtPosition != null) {
 					trade = new FxTrade(index, startingType, DecimalNum.valueOf(mtPosition.openPrice), amount,
 							transactionCostModel);
@@ -162,14 +161,16 @@ public class FxPosition extends Position {
 	 * @param takeProfit
 	 * @return trade reponse after placing MARKET ORDER
 	 */
-	private MetatraderTradeResponse executeTrade(TradeType tradeType, Num price, Num amount, String symbol,
-			Double stopLoss, Double takeProfit) {
+	private MetatraderTradeResponse executeTrade(TradeType tradeType, Num amount, String symbol, Double stopLoss,
+			Double takeProfit) {
 		TradeRequest request = new TradeRequest();
+		Double buyPrice = TradeUtil.getCurrentBuyPrice(tradeType);
+		Double sellPrice = TradeUtil.getCurrentBuyPrice(tradeType.complementType());
 		request.setVolume(amount.doubleValue());
 		request.setSymbol(symbol);
 		request.setActionType(tradeType);
-		request.setStopLoss(getStopLossPrice(tradeType, price.doubleValue(), stopLoss));
-		request.setTakeProfit(getTakeProfitPrice(tradeType, price.doubleValue(), takeProfit));
+		request.setStopLoss(getStopLossPrice(tradeType, sellPrice, stopLoss));
+		request.setTakeProfit(getTakeProfitPrice(tradeType, buyPrice, takeProfit));
 		MetatraderTradeResponse createOrderResponse = null;
 		try {
 			log.info("Placing market price order!");

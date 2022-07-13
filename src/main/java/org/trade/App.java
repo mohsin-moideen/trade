@@ -82,7 +82,7 @@ public class App implements Runnable {
 		Constants.symbolSpec = MetaApiUtil.getMetaApiConnection().getSymbolSpecification(symbol).join();
 		MetaApiUtil.getMetaApiConnection().addSynchronizationListener(
 				new OrderSynchronizationListener(series, volume, tradingRecord, Thread.currentThread().getName()));
-		QuoteListener quoteListener = new QuoteListener(tradingRecord, Thread.currentThread().getName());
+		QuoteListener quoteListener = new QuoteListener(tradingRecord, Thread.currentThread().getName(), symbol);
 		MetaApiUtil.getMetaApiConnection().addSynchronizationListener(quoteListener);
 
 		log.info("Initialization complete");
@@ -108,17 +108,24 @@ public class App implements Runnable {
 			log.info("Bar added, close price = " + lastClosePrice);
 			int endIndex = series.getEndIndex();
 			if (strategy.shouldEnter(endIndex)) {
-				// Our strategy should enter
-				boolean entered = tradingRecord.enter(endIndex, lastClosePrice, volume, getStopLoss(strategy),
-						getTakeProfit(strategy));
-				if (entered) {
-					Trade entry = tradingRecord.getLastEntry();
-					log.info("Entered on " + entry.getIndex() + " (price=" + entry.getNetPrice().doubleValue()
-							+ ", amount=" + entry.getAmount().doubleValue() + ")");
-					TelegramUtils.sendMessage("Position entered\nStrategy: " + Thread.currentThread().getName()
-							+ "\nPosition type: " + tradingRecord.getStartingType() + "\nEntry price: "
-							+ entry.getNetPrice().doubleValue());
+				try {
+					boolean entered = tradingRecord.enter(endIndex, lastClosePrice, volume, getStopLoss(strategy),
+							getTakeProfit(strategy));
+					if (entered) {
+						Trade entry = tradingRecord.getLastEntry();
+						log.info("Entered on " + entry.getIndex() + " (price=" + entry.getNetPrice().doubleValue()
+								+ ", amount=" + entry.getAmount().doubleValue() + ")");
+						TelegramUtils.sendMessage("Position entered\nStrategy: " + Thread.currentThread().getName()
+								+ "\nPosition type: " + tradingRecord.getStartingType() + "\nEntry price: "
+								+ entry.getNetPrice().doubleValue());
+					}
+				} catch (Exception e) {
+					log.error("Failed to open position ", e);
+					TelegramUtils.sendMessage("Failed to open position!\nStrategy: " + Thread.currentThread().getName()
+							+ "Error " + e.getMessage());
+					TelegramUtils.sendMessage("Will retry!");
 				}
+
 			} else if (strategy.shouldExit(endIndex)) {
 				// Our strategy should exit
 				boolean exited = tradingRecord.exit(endIndex, lastClosePrice, volume);

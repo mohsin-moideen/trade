@@ -20,9 +20,6 @@ import cloud.metaapi.sdk.clients.meta_api.models.MetatraderTradeResponse;
 
 public class QuoteListener extends SynchronizationListener {
 
-	// Global - please do not set anywhere else!
-	public static MetatraderSymbolPrice price;
-
 	private TradeType tradeType;
 	private MetatraderPosition counterPosition;
 	private FxTradingRecord tradingRecord;
@@ -31,8 +28,10 @@ public class QuoteListener extends SynchronizationListener {
 	private String threadName;
 	private TrendAnalysis trendAnalysis;
 	private int priceTicker;
+	private static MetatraderSymbolPrice price;
+	private String symbol;
 
-	public QuoteListener(FxTradingRecord tradingRecord, String threadName) {
+	public QuoteListener(FxTradingRecord tradingRecord, String threadName, String symbol) {
 		super();
 		this.tradingRecord = tradingRecord;
 		this.tradeType = tradingRecord.getStartingType();
@@ -40,6 +39,11 @@ public class QuoteListener extends SynchronizationListener {
 		tradingRecord.setQuoteListener(this);
 		trendAnalysis = new TrendAnalysis();
 		priceTicker = 0;
+		this.symbol = symbol;
+	}
+
+	public static MetatraderSymbolPrice getPrice() {
+		return JsonUtils.copyObject(price, MetatraderSymbolPrice.class);
 	}
 
 	private static final Logger log = LogManager.getLogger(QuoteListener.class);
@@ -47,9 +51,13 @@ public class QuoteListener extends SynchronizationListener {
 	@Override
 	public CompletableFuture<Void> onSymbolPriceUpdated(String instanceIndex, MetatraderSymbolPrice symbolPrice) {
 		MetatraderPosition openPosition = tradingRecord.getCurrentPosition().getMtPosition();
+		if (symbolPrice.symbol.equals(symbol)) {
+			Thread.currentThread().setName(threadName);
+			price = symbolPrice;
+			log.info(symbol + "price updated " + JsonUtils.getString(symbolPrice));
+		}
 		if (openPosition == null || !symbolPrice.symbol.equals(openPosition.symbol)) // symbol check for redundancy
 			return CompletableFuture.completedFuture(null);
-		Thread.currentThread().setName(threadName);
 		log.debug(symbolPrice.symbol + " price updated " + JsonUtils.getString(symbolPrice));
 		Double currentPrice;
 		Double counterOrderPrice;
@@ -63,7 +71,6 @@ public class QuoteListener extends SynchronizationListener {
 			counterOrderPrice = symbolPrice.bid;
 			actionType = TradeType.BUY;
 		}
-		price = symbolPrice;
 		openPosition.currentPrice = currentPrice;
 		trendAnalysis.updateTrend(currentPrice);
 		log.debug("currentPrice = " + currentPrice);

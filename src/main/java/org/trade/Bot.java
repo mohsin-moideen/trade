@@ -47,7 +47,7 @@ public class Bot {
 //		BarSeries gbpusdSeries1 = SeriesUtil.initMovingBarSeries(SYMBOL_GBPUSD, timeframe, 500);
 //		BarSeries gbpusdSeries2 = SeriesUtil.initMovingBarSeries(SYMBOL_GBPUSD, timeframe, 500);
 		Strategy strategy3 = Strategies.getVwap9EmaSellStrategy(eurjpySeries1, DecimalNum.valueOf(0.02),
-				DecimalNum.valueOf(0.09));
+				DecimalNum.valueOf(0.02));
 //		Strategy strategy4 = Strategies.getVwap9EmaBuyStrategy(gbpusdSeries2, DecimalNum.valueOf(0.07),
 //				DecimalNum.valueOf(0.09));
 

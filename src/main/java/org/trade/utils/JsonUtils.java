@@ -15,4 +15,9 @@ public class JsonUtils {
 		return gson.toJson(object);
 	}
 
+	@SuppressWarnings("unchecked")
+	public static <T> T copyObject(T object1, Class<T> classType) {
+		return (T) getObject(getString(object1), classType);
+	}
+
 }
