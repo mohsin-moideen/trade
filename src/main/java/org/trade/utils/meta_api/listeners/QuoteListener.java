@@ -23,7 +23,7 @@ public class QuoteListener extends SynchronizationListener {
 	private TradeType tradeType;
 	private MetatraderPosition counterPosition;
 	private FxTradingRecord tradingRecord;
-	private static final double triggerMultiplier = 2;
+	private static final double triggerMultiplier = 1;
 	private static final int PRICES_COUNT = 8;
 	private String threadName;
 	private TrendAnalysis trendAnalysis;
